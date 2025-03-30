@@ -1,6 +1,6 @@
 # SE-Spring25-Group2
 
-### Team Members: Sudhanshu Sali (ss17526), Harsh Jalutharia (hj2607), Soham Moghe (sm11882),Clely Fernandes(cvf9554),Rachit Mehul Pathak(rmp10015) Frank Fan(lf2606)
+### Team Members: Sudhanshu Sali (ss17526), Harsh Jalutharia (hj2607), Soham Moghe (sm11882),Clely Fernandes(cvf9554),Rachit Mehul Pathak(rmp10015), Frank Fan(lf2606)
 
 ## Our final 3 ideas are:
 
