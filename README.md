@@ -13,7 +13,7 @@
 - ClassBuddy is a web application designed to enhance collaborative learning for students by helping them form study groups, share resources, and organize projects. The platform enables students to connect with peers based on shared academic goals, class enrollment, and interests, making group study and collaboration easier and more efficient. It integrates tools for file sharing, scheduling, and real-time collaboration to ensure a streamlined group learning experience. By offering features like AI-generated study aids, gamified rewards, and calendar synchronization, the app encourages productivity and fosters academic success.
 
 ## Steps to run Backend
-1. Set up a Python virtual environment and install the dependencies(once):
+1. Set up a Python virtual environment and install the dependencies:
     <pre> python -m venv venv </pre>
     <pre> source venv/bin/activate </pre>
     <pre> pip install -r backend/requirements.txt </pre>
