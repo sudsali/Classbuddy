@@ -13,23 +13,40 @@
 - ClassBuddy is a web application designed to enhance collaborative learning for students by helping them form study groups, share resources, and organize projects. The platform enables students to connect with peers based on shared academic goals, class enrollment, and interests, making group study and collaboration easier and more efficient. It integrates tools for file sharing, scheduling, and real-time collaboration to ensure a streamlined group learning experience. By offering features like AI-generated study aids, gamified rewards, and calendar synchronization, the app encourages productivity and fosters academic success.
 
 ## Steps to run Backend
-1. Set up a Python virtual environment and install the dependencies:
-    <pre> python -m venv venv </pre>
-    <pre> source venv/bin/activate </pre>
-    <pre> pip install -r backend/requirements.txt </pre>
-  
-2. Set up the database:
-    <pre> cd backend </pre>
-    <pre> python manage.py makemigrations </pre>
-    <pre> python manage.py migrate </pre>
-  
-3. Create a superuser (admin) account:
-    <pre> python manage.py createsuperuser </pre>
-  
-4. Run the development server:
-    <pre> python manage.py runserver </pre>
-5. The server will run on http://127.0.0.1:8000/ by default
-    - use your superuser account that just created to log in on http://127.0.0.1:8000/admin.
+**One-time Setup Commands** (only need to run once when first setting up the project):
+
+<pre># 1. Create and activate virtual environment:
+python -m venv venv
+source venv/bin/activate  # for macOS/Linux...might be different for windowns
+
+# 2. Install dependencies:
+pip install -r backend/requirements.txt
+
+# 3. Set up the database:
+cd backend
+python manage.py makemigrations
+python manage.py migrate
+
+# 4. Create admin account:
+python manage.py createsuperuser 
+</pre>
+
+The server will run on http://127.0.0.1:8000/ by default.
+- Please use your superuser account that just created to log in on http://127.0.0.1:8000/admin.
+
+---
+
+**Regular Usage Commands** (run every time you work on the project):
+<pre># 1. Activate virtual environment (if not already activated)
+source venv/bin/activate  # On macOS/Linux
+
+# 2. Start the development server
+cd backend
+python manage.py runserver
+</pre>
+
+*Noticed that if you make changes to models, add new apps, update database schema...you need to run makemigrations and migrate again.
+
 
 ## Tech Stack
 Our project uses:
