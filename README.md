@@ -27,7 +27,7 @@
     <pre> python manage.py createsuperuser </pre>
   
 4. Run the development server:
-    <pre> 'python manage.py runserver' </pre>
+    <pre> python manage.py runserver </pre>
 
 ## Tech Stack
 Our project uses:
