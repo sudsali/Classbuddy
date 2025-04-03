@@ -15,7 +15,7 @@
 ## Steps to run Backend
 1. Set up a Python virtual environment and install the dependencies(once):
     <pre> python -m venv venv </pre>
-    <pre> source venv/bin/activate' on mac/Linux </pre>
+    <pre> source venv/bin/activate on mac/Linux </pre>
     <pre> pip install -r backend/requirements.txt </pre>
   
 2. Set up the database:
