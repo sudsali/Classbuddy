@@ -28,6 +28,8 @@
   
 4. Run the development server:
     <pre> python manage.py runserver </pre>
+5. The server will run on http://127.0.0.1:8000/ by default
+    - use your superuser account that just created to log in on http://127.0.0.1:8000/admin.
 
 ## Tech Stack
 Our project uses:
