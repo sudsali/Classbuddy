@@ -1,0 +1,132 @@
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+}
+
+.sidebar-header {
+  padding: 1rem;
+  text-align: center;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.logo {
+  font-size: 2rem;
+  color: var(--primary);
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.nav-item:hover {
+  background-color: var(--hover);
+}
+
+.nav-item.active {
+  background-color: var(--active);
+}
+
+.nav-item.active .nav-icon,
+.nav-item.active .nav-text {
+  color: var(--primary);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--primary);
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+  width: 24px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.nav-text {
+  margin-left: 1rem;
+  font-size: 1rem;
+  transition: color 0.2s ease;
+}
+
+.user-section {
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.user-profile {
+  padding: 0.5rem 1.5rem;
+  display: flex;
+  align-items: center;
+  color: var(--text-primary);
+}
+
+.user-icon {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.user-name {
+  margin-left: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.logout-button {
+  width: 100%;
+  padding: 0.5rem 1.5rem;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.logout-button:hover {
+  background-color: var(--hover);
+  color: var(--text-primary);
+}
+
+.logout-icon {
+  font-size: 1.2rem;
+  margin-right: 1rem;
+} 
