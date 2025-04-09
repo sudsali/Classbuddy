@@ -63,9 +63,9 @@ docker-compose up --build -d
 
 ## Tech Stack
 Our project uses:
-- Django 4.2.20 as the web framework
-- Django REST framework for API endpoints
-- PostgreSQL as the database
+- Frontend: React.js
+- Backend: Django
+- Database: PostgreSQL(Relational Data) , Reddis(Cache and Real time chatting)
 - Boto3 for AWS S3 integration
-- GitHub Actions for CI/CD
+- GitHub Actions for CI/CD pipeline
   
