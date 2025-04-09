@@ -13,10 +13,14 @@
 - ClassBuddy is a web application designed to enhance collaborative learning for students by helping them form study groups, share resources, and organize projects. The platform enables students to connect with peers based on shared academic goals, class enrollment, and interests, making group study and collaboration easier and more efficient. It integrates tools for file sharing, scheduling, and real-time collaboration to ensure a streamlined group learning experience. By offering features like AI-generated study aids, gamified rewards, and calendar synchronization, the app encourages productivity and fosters academic success.
 
 ## Steps to run Backend
-**Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)**
-**One-time Setup Commands** (only need to run once when first setting up the project):
+**1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)**
 
-<pre>#1. Build and start backend containers:
+**2. use the following One-time Setup Commands** (only need to run once when first setting up the project):
+
+First open two terminal tabs for backend & frontend, then execute the following commands:
+
+**Backend terminal**
+<pre># 1. Build and start backend containers:
 cd backend
 docker-compose up --build -d
 
@@ -24,16 +28,30 @@ docker-compose up --build -d
 docker-compose exec web python manage.py makemigrations
 docker-compose exec web python manage.py migrate
 
-# 3. Create admin account:
+# 3. Create admin account (if you have not created one):
 docker-compose exec web python manage.py createsuperuser
 </pre>
 
 The server will run on http://127.0.0.1:8000/ by default.
 - Please use your superuser account that you just created to log in on http://127.0.0.1:8000/admin.
 
+
+**Frontend terminal**
+<pre># 1. Navigate to the frontend directory:
+cd frontend
+  
+# 2. Install dependencies (required when running for the first time or after pulling new changes):
+npm install
+  
+# 3. Start the development server:
+npm start
+</pre>
+
+The frontend should then be accessible in your browser. By default, Create React App starts the development server on http://localhost:3000.
+
 ---
 
-**Regular Usage Commands** (run every time you work on the project):
+***Regular Usage Commands** (run every time you work on the project):
 <pre>
 # 1. (OPTIONAL) Run migrations if you make changes to models, add new apps, update database schema etc. 
 docker-compose exec web python manage.py makemigrations
@@ -42,8 +60,6 @@ docker-compose exec web python manage.py migrate
 # 2. Start the development server
 docker-compose up --build -d
 </pre>
-
-*Noticed that if you make changes to models, add new apps, update database schema...you need to run makemigrations and migrate again.
 
 
 ## Tech Stack
