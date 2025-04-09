@@ -12,7 +12,7 @@
 
 - ClassBuddy is a web application designed to enhance collaborative learning for students by helping them form study groups, share resources, and organize projects. The platform enables students to connect with peers based on shared academic goals, class enrollment, and interests, making group study and collaboration easier and more efficient. It integrates tools for file sharing, scheduling, and real-time collaboration to ensure a streamlined group learning experience. By offering features like AI-generated study aids, gamified rewards, and calendar synchronization, the app encourages productivity and fosters academic success.
 
-## Steps to run Backend
+## Steps to Run Project
 **1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)**
 
 **2. Use the following One-time Setup Commands** (only need to run once when first setting up the project), first open **two terminal tabs** for backend & frontend, then execute the following commands:
