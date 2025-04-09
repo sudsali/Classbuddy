@@ -29,8 +29,30 @@ SECRET_KEY = 'django-insecure-)#t4sk0idu-43!)xlu)m5k+1%#@%p1@#$%^-v7@!tkpksyzo6^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # Only for development!
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Application definition
 
@@ -42,6 +64,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # Third party apps
+    'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
+
     #Custom Apps
     'apps.users.apps.UsersConfig',
     'apps.study_groups.apps.StudyGroupsConfig',
@@ -50,7 +77,10 @@ INSTALLED_APPS = [
     'apps.notifications.apps.NotificationsConfig'
 ]
 
+AUTH_USER_MODEL = 'users.User'
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -84,14 +114,13 @@ WSGI_APPLICATION = 'classbuddy.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'classbuddy_db',
         'USER': 'admin',
         'PASSWORD': 'segroup2',
-        'HOST': 'db',
+        'HOST': 'db',  # Changed to use Docker service name
         'PORT': '5432',
     }
 }
@@ -124,6 +153,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

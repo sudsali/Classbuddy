@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth import logout
@@ -7,27 +8,37 @@ def validate_edu_email(value):
     if not value.lower().endswith('.edu'):
         raise ValidationError('Only .edu email addresses are allowed.')
 
-class User(models.Model):
-    username = models.CharField(
-        max_length=255, 
-        unique=True,
-        help_text="Unique identifier for login"
-    )
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(email, password, **extra_fields)
+
+class User(AbstractUser):
+    username = None  # Remove username field
     email = models.EmailField(
         unique=True,
         validators=[validate_edu_email],
         help_text="Valid .edu email address"
     )
-    name = models.CharField(
-        max_length=255,
-        help_text="Display name for the user"
-    )
+    
+    # Make email the username field
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
-    shared_files = models.ManyToManyField(
-        'files.File',
-        related_name='shared_by_users',
-        help_text="Files this user has shared"
-    )
+    objects = CustomUserManager()
 
     def create_group(self, name, description):
         """Creates a new study group."""
@@ -64,4 +75,4 @@ class User(models.Model):
         verbose_name = "User"
 
     def __str__(self):
-        return f"{self.username} ({self.email})"
+        return f"{self.email} ({self.get_full_name()})"

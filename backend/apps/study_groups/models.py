@@ -1,10 +1,13 @@
 from django.db import models
 from django.utils.timezone import now
 from django.core.validators import MinLengthValidator, MaxLengthValidator
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class StudyGroup(models.Model):
     name = models.CharField(
-        max_length=255,
+        max_length=100,
         validators=[
             MinLengthValidator(3),
             MaxLengthValidator(50)
@@ -14,26 +17,16 @@ class StudyGroup(models.Model):
     description = models.TextField(
         help_text="Detailed description of group purpose"
     )
-    owner = models.ForeignKey(
-        'users.User', 
-        on_delete=models.CASCADE,
-        related_name='owned_groups',
-        help_text="Creator/admin of the group"
-    )
-    members = models.ManyToManyField(
-        'users.User',  # String reference
-        related_name='joined_groups',
-        help_text="All participants in the group"
-    )
+    subject = models.CharField(max_length=100)
+    max_members = models.IntegerField(default=5)
+    created_at = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups')
+    members = models.ManyToManyField(User, related_name='joined_groups')
     unique_identifier = models.CharField(
         max_length=50,
         unique=True,
         editable=False,
         help_text="Auto-generated unique group ID"
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Group creation timestamp"
     )
     deleted_at = models.DateTimeField(
         null=True,
@@ -45,7 +38,7 @@ class StudyGroup(models.Model):
         """Generates unique ID using name + owner + timestamp."""
         if not self.unique_identifier:
             timestamp = now().strftime('%Y%m%d%H%M%S')
-            self.unique_identifier = f"{self.name}-{self.owner.username}-{timestamp}"
+            self.unique_identifier = f"{self.name}-{self.creator.username}-{timestamp}"
         super().save(*args, **kwargs)
 
     def add_member(self, user):
@@ -86,7 +79,12 @@ class StudyGroup(models.Model):
         return True
 
     class Meta:
-         verbose_name = "Study Group"
+        verbose_name = "Study Group"
+        ordering = ['-created_at']
 
     def __str__(self):
-       return f"{self.unique_identifier}"
+        return self.name
+
+    @property
+    def members_count(self):
+        return self.members.count()
