@@ -15,11 +15,9 @@
 ## Steps to run Backend
 **1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)**
 
-**2. use the following One-time Setup Commands** (only need to run once when first setting up the project):
+**2. Use the following One-time Setup Commands** (only need to run once when first setting up the project), first open **two terminal tabs** for backend & frontend, then execute the following commands:
 
-First open two terminal tabs for backend & frontend, then execute the following commands:
-
-**Backend terminal**
+**Backend Terminal**
 <pre># 1. Build and start backend containers:
 cd backend
 docker-compose up --build -d
@@ -35,8 +33,9 @@ docker-compose exec web python manage.py createsuperuser
 The server will run on http://127.0.0.1:8000/ by default.
 - Please use your superuser account that you just created to log in on http://127.0.0.1:8000/admin.
 
+---
 
-**Frontend terminal**
+**Frontend Terminal**
 <pre># 1. Navigate to the frontend directory:
 cd frontend
   
@@ -51,7 +50,7 @@ The frontend should then be accessible in your browser. By default, Create React
 
 ---
 
-***Regular Usage Commands** (run every time you work on the project):
+**Regular Usage Commands** (run every time you work on the project):
 <pre>
 # 1. (OPTIONAL) Run migrations if you make changes to models, add new apps, update database schema etc. 
 docker-compose exec web python manage.py makemigrations
