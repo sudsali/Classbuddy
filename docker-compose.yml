@@ -1,7 +1,7 @@
 services:
-  web:
+  backend:
     build:
-      context: .
+      context: ./backend
     container_name: classbuddy_backend
     restart: always
     depends_on:
@@ -13,7 +13,19 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/backend
+      - ./backend:/backend
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: classbuddy_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/frontend
+    environment:
+      - NODE_ENV=development
 
   db:
     image: postgres:15

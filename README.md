@@ -29,51 +29,26 @@
 ## Steps to Run Project
 **1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)**
 
-**2. Use the following One-time Setup Commands** (only need to run once when first setting up the project), first open **two terminal tabs** for backend & frontend, then execute the following commands:
+**2. Use the following commands** 
 
-**Backend Terminal**
-<pre># 1. Build and start backend containers:
-cd backend
+<pre># 1. Build and start docker containers:
 docker-compose up --build -d
 
-# 2. Run migrations inside container:
-docker-compose exec web python manage.py makemigrations
-docker-compose exec web python manage.py migrate
+# 2. (REQUIRED FIRST TIME & OPTIONAL OTHERWISE) Run migrations if you make changes to models, add new apps, update database schema etc. 
+docker-compose exec backend python manage.py makemigrations
+docker-compose exec backend python manage.py migrate
 
-# 3. Create admin account (if you have not created one):
-docker-compose exec web python manage.py createsuperuser
+# 3. (REQUIRED FIRST TIME & OPTIONAL OTHERWISE) Create admin account:
+docker-compose exec backend python manage.py createsuperuser
 </pre>
 
-The server will run on http://127.0.0.1:8000/ by default.
-- Please use your superuser account that you just created to log in on http://127.0.0.1:8000/admin.
 
----
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000/admin
 
-**Frontend Terminal**
-<pre># 1. Navigate to the frontend directory:
-cd frontend
-  
-# 2. Install dependencies (required when running for the first time or after pulling new changes):
-npm install
-  
-# 3. Start the development server:
-npm start
-</pre>
-
-The frontend should then be accessible in your browser. By default, Create React App starts the development server on http://localhost:3000.
-
----
-
-**Regular Usage Commands** (run every time you work on the project):
-<pre>
-# 1. (OPTIONAL) Run migrations if you make changes to models, add new apps, update database schema etc. 
-docker-compose exec web python manage.py makemigrations
-docker-compose exec web python manage.py migrate
-
-# 2. Start the development server
-docker-compose up --build -d
-</pre>
-
+## Troubleshooting
+- The React frontend might take a minute to load after starting the docker containers. 
+- If the frontend loads, but the django admin page doesn't, try stopping the containers from Docker Desktop client and then start them again using the command above.
 
 ## Tech Stack
 Our project uses:
