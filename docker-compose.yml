@@ -12,8 +12,6 @@ services:
       REDIS_URL: "redis://classbuddy_redis:6379/1"
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/backend
 
   frontend:
     build:
@@ -22,8 +20,6 @@ services:
     restart: always
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/frontend
     environment:
       - NODE_ENV=development
 
@@ -37,9 +33,7 @@ services:
       POSTGRES_PASSWORD: segroup2
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
+    
   redis:
     image: redis:latest
     container_name: classbuddy_redis
