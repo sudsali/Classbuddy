@@ -8,6 +8,8 @@ const Groups = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showMembersModal, setShowMembersModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [newGroup, setNewGroup] = useState({
     name: '',
     description: '',
@@ -95,6 +97,11 @@ const Groups = () => {
     }
   };
 
+  const handleGroupClick = (group) => {
+    setSelectedGroup(group);
+    setShowMembersModal(true);
+  };
+
   if (loading) {
     return (
       <div className="groups-container">
@@ -127,7 +134,7 @@ const Groups = () => {
       <div className="groups-grid">
         {groups && groups.length > 0 ? (
           groups.map(group => (
-            <div key={group.id} className="group-card">
+            <div key={group.id} className="group-card" onClick={() => handleGroupClick(group)}>
               <h3>{group.name}</h3>
               <p className="group-subject">Subject: {group.subject}</p>
               <p className="group-description">{group.description}</p>
@@ -136,7 +143,10 @@ const Groups = () => {
                 {!group.is_member && group.members_count < group.max_members && (
                   <button 
                     className="join-group-btn"
-                    onClick={() => handleJoinGroup(group.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleJoinGroup(group.id);
+                    }}
                   >
                     Join Group
                   </button>
@@ -149,14 +159,20 @@ const Groups = () => {
                     {group.is_creator ? (
                       <button 
                         className="dismiss-group-btn"
-                        onClick={() => handleDismissGroup(group.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDismissGroup(group.id);
+                        }}
                       >
                         Dismiss Group
                       </button>
                     ) : (
                       <button 
                         className="leave-group-btn"
-                        onClick={() => handleLeaveGroup(group.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLeaveGroup(group.id);
+                        }}
                       >
                         Leave Group
                       </button>
@@ -226,6 +242,51 @@ const Groups = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showMembersModal && selectedGroup && (
+        <div className="modal-overlay" onClick={() => setShowMembersModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>{selectedGroup.name} - Members</h2>
+            <div className="members-list">
+              <table>
+                <colgroup>
+                  <col className="col-name" />
+                  <col className="col-email" />
+                  <col className="col-role" />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th className="col-name">Name</th>
+                    <th className="col-email">Email</th>
+                    <th className="col-role">Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedGroup.members.map(member => (
+                    <tr key={member.id}>
+                      <td className="col-name">{`${member.first_name} ${member.last_name}`}</td>
+                      <td className="col-email">{member.email}</td>
+                      <td className="col-role">
+                        <span className={selectedGroup.creator === member.id ? "owner-badge" : "member-badge"}>
+                          {selectedGroup.creator === member.id ? "Owner" : "Member"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="modal-buttons">
+              <button 
+                className="cancel-btn"
+                onClick={() => setShowMembersModal(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

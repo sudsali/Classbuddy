@@ -256,4 +256,66 @@
 
 .leave-group-btn:hover {
   background-color: #c82333;
+}
+
+/* Members Modal Specific Styles */
+.members-list {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 20px;
+}
+
+.members-list table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.members-list table th,
+.members-list table td {
+  padding: 16px 24px;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+/* Apply text truncation only to email column */
+.members-list table .col-email {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.members-list table .col-name {
+  width: 35%;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.members-list table .col-email {
+  width: 40%;
+}
+
+.members-list table .col-role {
+  width: 25%;
+}
+
+.members-list .owner-badge,
+.members-list .member-badge {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+  text-align: center;
+}
+
+.members-list .owner-badge {
+  background-color: #6f42c1;
+  color: white;
+}
+
+.members-list .member-badge {
+  background-color: #28a745;
+  color: white;
 } 
