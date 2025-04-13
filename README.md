@@ -31,15 +31,8 @@
 
 **2. Use the following commands** 
 
-<pre># 1. Build and start docker containers:
+<pre># Build and start docker containers:
 docker-compose up --build -d
-
-# 2. (REQUIRED FIRST TIME & OPTIONAL OTHERWISE) Run migrations if you make changes to models, add new apps, update database schema etc. 
-docker-compose exec backend python manage.py makemigrations
-docker-compose exec backend python manage.py migrate
-
-# 3. (REQUIRED FIRST TIME & OPTIONAL OTHERWISE) Create admin account:
-docker-compose exec backend python manage.py createsuperuser
 </pre>
 
 
