@@ -79,6 +79,22 @@ const Groups = () => {
     }
   };
 
+  const handleDismissGroup = async (groupId) => {
+    try {
+      await axios.post(`http://127.0.0.1:8000/api/study-groups/${groupId}/dismiss/`, {}, {
+        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
+      });
+      fetchGroups();
+    } catch (error) {
+      console.error('Error dismissing group:', error);
+      if (error.response && error.response.data && error.response.data.detail) {
+        alert(error.response.data.detail);
+      } else {
+        alert('Failed to dismiss group. Please try again.');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="groups-container">
@@ -127,13 +143,24 @@ const Groups = () => {
                 )}
                 {group.is_member && (
                   <>
-                    <span className="member-badge">Member</span>
-                    <button 
-                      className="leave-group-btn"
-                      onClick={() => handleLeaveGroup(group.id)}
-                    >
-                      Leave Group
-                    </button>
+                    <span className={group.is_creator ? "owner-badge" : "member-badge"}>
+                      {group.is_creator ? "Owner" : "Member"}
+                    </span>
+                    {group.is_creator ? (
+                      <button 
+                        className="dismiss-group-btn"
+                        onClick={() => handleDismissGroup(group.id)}
+                      >
+                        Dismiss Group
+                      </button>
+                    ) : (
+                      <button 
+                        className="leave-group-btn"
+                        onClick={() => handleLeaveGroup(group.id)}
+                      >
+                        Leave Group
+                      </button>
+                    )}
                   </>
                 )}
               </div>
