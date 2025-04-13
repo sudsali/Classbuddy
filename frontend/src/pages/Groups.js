@@ -25,7 +25,7 @@ const Groups = () => {
       setLoading(true);
       setError(null);
       const response = await axios.get('http://127.0.0.1:8000/api/study-groups/', {
-        headers: { Authorization: `Token ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       setGroups(response.data);
     } catch (error) {
@@ -40,7 +40,7 @@ const Groups = () => {
     e.preventDefault();
     try {
       await axios.post('http://127.0.0.1:8000/api/study-groups/', newGroup, {
-        headers: { Authorization: `Token ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       setShowCreateModal(false);
       setNewGroup({ name: '', description: '', subject: '', max_members: 5 });
@@ -54,7 +54,7 @@ const Groups = () => {
   const handleJoinGroup = async (groupId) => {
     try {
       await axios.post(`http://127.0.0.1:8000/api/study-groups/${groupId}/join/`, {}, {
-        headers: { Authorization: `Token ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       fetchGroups();
     } catch (error) {
@@ -66,7 +66,7 @@ const Groups = () => {
   const handleLeaveGroup = async (groupId) => {
     try {
       await axios.post(`http://127.0.0.1:8000/api/study-groups/${groupId}/leave/`, {}, {
-        headers: { Authorization: `Token ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       fetchGroups();
     } catch (error) {

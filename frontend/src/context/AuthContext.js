@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check if user is already logged in
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
       // Verify token and get user info
       axios.get('http://127.0.0.1:8000/api/auth/user/', {
@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       })
       .catch(() => {
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
         setLoading(false);
       });
     } else {
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
         password
       });
       const { token, user } = response.data;
-      localStorage.setItem('token', token);
+      sessionStorage.setItem('token', token);
       setUser(user);
       return { success: true };
     } catch (error) {
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     setUser(null);
   };
 
