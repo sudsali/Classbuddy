@@ -3,8 +3,9 @@
 sleep 20
 
 # start the backend
-python manage.py migrate
 python manage.py makemigrations
+python manage.py migrate
+
 
 # create superuser with password
 export DJANGO_SUPERUSER_EMAIL=admin@nyu.edu
