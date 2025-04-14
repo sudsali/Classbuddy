@@ -5,6 +5,18 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+class ChatMessage(models.Model):
+    study_group = models.ForeignKey('StudyGroup', on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['timestamp']
+        
+    def __str__(self):
+        return f"{self.sender.get_full_name()} - {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
+
 class StudyGroup(models.Model):
     name = models.CharField(
         max_length=100,

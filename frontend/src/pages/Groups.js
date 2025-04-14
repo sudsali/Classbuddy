@@ -9,6 +9,7 @@ const Groups = () => {
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
+  const [showChatModal, setShowChatModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [newGroup, setNewGroup] = useState({
     name: '',
@@ -16,11 +17,37 @@ const Groups = () => {
     subject: '',
     max_members: 5
   });
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [messagePollingInterval, setMessagePollingInterval] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
     fetchGroups();
   }, []);
+
+  useEffect(() => {
+    if (showChatModal && selectedGroup) {
+      fetchMessages(selectedGroup.id);
+      
+      const interval = setInterval(() => {
+        fetchMessages(selectedGroup.id);
+      }, 3000);
+      
+      setMessagePollingInterval(interval);
+      
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    } else {
+      if (messagePollingInterval) {
+        clearInterval(messagePollingInterval);
+        setMessagePollingInterval(null);
+      }
+    }
+  }, [showChatModal, selectedGroup]);
 
   const fetchGroups = async () => {
     try {
@@ -100,6 +127,58 @@ const Groups = () => {
   const handleGroupClick = (group) => {
     setSelectedGroup(group);
     setShowMembersModal(true);
+  };
+
+  const fetchMessages = async (groupId) => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/study-groups/${groupId}/messages/`, {
+        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    try {
+      await axios.post(`http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/create_message/`, {
+        content: newMessage.trim()
+      }, {
+        headers: {
+          'Authorization': `Token ${sessionStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      setNewMessage('');
+      fetchMessages(selectedGroup.id);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      if (error.response && error.response.data && error.response.data.detail) {
+        alert(error.response.data.detail);
+      } else {
+        alert('Failed to send message. Please try again.');
+      }
+    }
+  };
+
+  const handleEnterChat = (group) => {
+    setSelectedGroup(group);
+    setShowMembersModal(false);
+    setShowChatModal(true);
+  };
+
+  const handleCloseChatModal = () => {
+    setShowChatModal(false);
+    setMessages([]);
+    if (messagePollingInterval) {
+      clearInterval(messagePollingInterval);
+      setMessagePollingInterval(null);
+    }
   };
 
   if (loading) {
@@ -280,11 +359,68 @@ const Groups = () => {
               </table>
             </div>
             <div className="modal-buttons">
+              {selectedGroup && selectedGroup.is_member && (
+                <button 
+                  className="chat-btn"
+                  onClick={() => {
+                    setShowMembersModal(false);
+                    setShowChatModal(true);
+                  }}
+                >
+                  Enter Chat Room
+                </button>
+              )}
               <button 
                 className="cancel-btn"
                 onClick={() => setShowMembersModal(false)}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showChatModal && selectedGroup && (
+        <div className="modal-overlay" onClick={handleCloseChatModal}>
+          <div className="modal chat-modal" onClick={e => e.stopPropagation()}>
+            <h2>{selectedGroup.name} - Chat Room</h2>
+            <div className="chat-messages">
+              {messages.map(message => (
+                <div 
+                  key={message.id} 
+                  className={`message ${message.sender.id === user.id ? 'message-own' : 'message-other'}`}
+                >
+                  <div className="message-header">
+                    <span className="message-sender">
+                      {message.sender.first_name} {message.sender.last_name}
+                    </span>
+                    <span className="message-time">
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <div className="message-content">{message.content}</div>
+                </div>
+              ))}
+            </div>
+            <form onSubmit={sendMessage} className="chat-input">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type your message..."
+                className="chat-input-field"
+              />
+              <button type="submit" className="chat-send-btn">
+                Send
+              </button>
+            </form>
+            <div className="modal-buttons">
+              <button 
+                className="cancel-btn"
+                onClick={handleCloseChatModal}
+              >
+                Close Chat
               </button>
             </div>
           </div>

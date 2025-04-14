@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StudyGroup
+from .models import StudyGroup, ChatMessage
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -8,6 +8,14 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email', 'first_name', 'last_name']
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    sender = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = ChatMessage
+        fields = ['id', 'study_group', 'sender', 'content', 'timestamp']
+        read_only_fields = ['sender', 'timestamp']
 
 class StudyGroupSerializer(serializers.ModelSerializer):
     members_count = serializers.IntegerField(read_only=True)

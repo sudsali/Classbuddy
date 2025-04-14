@@ -3,10 +3,33 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import StudyGroup
-from .serializers import StudyGroupSerializer
+from .models import StudyGroup, ChatMessage
+from .serializers import StudyGroupSerializer, ChatMessageSerializer
 
 # Create your views here.
+
+class ChatMessageViewSet(viewsets.ModelViewSet):
+    serializer_class = ChatMessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Return messages for a specific study group."""
+        group_id = self.request.query_params.get('group_id')
+        if group_id:
+            group = StudyGroup.objects.get(id=group_id)
+            if self.request.user in group.members.all():
+                return ChatMessage.objects.filter(study_group_id=group_id)
+        return ChatMessage.objects.none()
+
+    def perform_create(self, serializer):
+        """Add the sender and validate group membership."""
+        group_id = serializer.validated_data['study_group'].id
+        group = StudyGroup.objects.get(id=group_id)
+        
+        if self.request.user not in group.members.all():
+            raise PermissionError("You must be a member of the group to send messages.")
+            
+        serializer.save(sender=self.request.user)
 
 class StudyGroupViewSet(viewsets.ModelViewSet):
     queryset = StudyGroup.objects.all()
@@ -80,3 +103,51 @@ class StudyGroupViewSet(viewsets.ModelViewSet):
 
         group.delete()
         return Response({'detail': 'Group has been dismissed.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'])
+    def messages(self, request, pk=None):
+        """Get chat messages for a specific group."""
+        group = self.get_object()
+        if request.user not in group.members.all():
+            return Response(
+                {"detail": "You must be a member of the group to view messages."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        messages = ChatMessage.objects.filter(study_group=group)
+        serializer = ChatMessageSerializer(messages, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def create_message(self, request, pk=None):
+        """Create a new message in the group."""
+        try:
+            group = self.get_object()
+            
+            if request.user not in group.members.all():
+                return Response(
+                    {"detail": "You must be a member of the group to send messages."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            content = request.data.get('content')
+            if not content:
+                return Response(
+                    {"detail": "Message content is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            message = ChatMessage.objects.create(
+                study_group=group,
+                sender=request.user,
+                content=content
+            )
+            
+            serializer = ChatMessageSerializer(message)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
