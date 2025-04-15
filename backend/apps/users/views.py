@@ -52,6 +52,27 @@ def register(request):
             'user': UserSerializer(user).data
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_email(request):
+    email = request.data.get('email')
+    code = request.data.get('code')
+
+    if not email or not code:
+        return Response({'error': 'Email and code are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.get(email=email)
+        if user.verification_code == code:
+            user.is_verified = True
+            user.verification_code = ''
+            user.save()
+            return Response({'message': 'Email verified successfully!'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid verification code.'}, status=status.HTTP_400_BAD_REQUEST)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

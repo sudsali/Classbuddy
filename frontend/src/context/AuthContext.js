@@ -8,11 +8,9 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
     const token = sessionStorage.getItem('token');
     if (token) {
-      // Verify token and get user info
-      axios.get('http://127.0.0.1:8000/api/auth/user/', {
+      axios.get('http://127.0.0.1:8000/api/users/user/', {
         headers: { Authorization: `Token ${token}` }
       })
       .then(response => {
@@ -30,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/auth/login/', {
+      const response = await axios.post('http://127.0.0.1:8000/api/users/login/', {
         email,
         password
       });
@@ -39,16 +37,15 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Login failed' };
+      return { success: false, error: error.response?.data?.error || 'Login failed' };
     }
   };
 
   const register = async (userData) => {
     try {
-      await axios.post('http://127.0.0.1:8000/api/auth/register/', userData);
+      await axios.post('http://127.0.0.1:8000/api/users/register/', userData);
       return { success: true };
     } catch (error) {
-      // Format error messages from the backend
       const errorData = error.response?.data;
       let errorMessage = 'Registration failed';
       
@@ -88,4 +85,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};
