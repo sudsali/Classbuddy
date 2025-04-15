@@ -31,7 +31,6 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setSuccess(false);
-    setStep('register');
   
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -49,11 +48,13 @@ const Register = () => {
     const result = await register(userData);
   
     if (result.success) {
-      setStep('verify'); // Only show verification input if registration succeeds
+      setEmailForVerification(formData.email); // 🔑 set email for verify API
+      setShowVerification(true); // ✅ show verification input
     } else {
       setError(result.error || 'Registration failed');
     }
   };
+  
   
   const handleVerify = async () => {
     try {
