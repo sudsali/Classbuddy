@@ -78,6 +78,7 @@ INSTALLED_APPS = [
 ]
 
 AUTH_USER_MODEL = 'users.User'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -89,8 +90,16 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
 ROOT_URLCONF = 'classbuddy.urls'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'classbuddy8@gmail.com'
+EMAIL_HOST_PASSWORD = 'rwij wczo ygzb zijv'  # Your app password
+DEFAULT_FROM_EMAIL = 'ClassBuddy <classbuddy8@gmail.com>'
+
+
 
 TEMPLATES = [
     {

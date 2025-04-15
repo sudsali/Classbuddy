@@ -33,7 +33,9 @@ class User(AbstractUser):
         validators=[validate_edu_email],
         help_text="Valid .edu email address"
     )
-    
+    is_verified = models.BooleanField(default=False)
+    verification_code = models.CharField(max_length=6, blank=True, null=True)
+
     # Make email the username field
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
