@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = sessionStorage.getItem('token');
     if (token) {
-      axios.get('http://127.0.0.1:8000/api/users/user/', {
+      axios.get('http://127.0.0.1:8000/api/auth/user/', {
         headers: { Authorization: `Token ${token}` }
       })
       .then(response => {
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/users/login/', {
+      const response = await axios.post('http://127.0.0.1:8000/api/auth/login/', {
         email,
         password
       });
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      await axios.post('http://127.0.0.1:8000/api/users/register/', userData);
+      await axios.post('http://127.0.0.1:8000/api/auth/register/', userData);
       return { success: true };
     } catch (error) {
       const errorData = error.response?.data;
