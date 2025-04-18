@@ -16,6 +16,7 @@ const Register = () => {
   const [showVerification, setShowVerification] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState('register');
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -71,8 +72,16 @@ const Register = () => {
 
       const data = await response.json();
       if (response.ok) {
+        // Store token and user data upon successful verification
+        if (data.token) {
+          sessionStorage.setItem('token', data.token);
+        }
         setSuccess(true);
         setShowVerification(false);
+        // Redirect to login page after successful verification
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
       } else {
         setError(data.error || 'Verification failed');
       }
@@ -160,13 +169,25 @@ const Register = () => {
         ) : (
           <div className="verification-container">
             <h3>Verify your email</h3>
+            <p className="verification-email">Verification code sent to: {emailForVerification}</p>
             <input
               type="text"
               placeholder="Enter verification code"
               value={verificationCode}
               onChange={(e) => setVerificationCode(e.target.value)}
             />
-            <button onClick={handleVerify} className="auth-button">Verify Email</button>
+            <div className="verification-buttons">
+              <button onClick={handleVerify} className="auth-button">Verify Email</button>
+              <button 
+                onClick={() => {
+                  setShowVerification(false);
+                  setError('');
+                }} 
+                className="auth-button secondary"
+              >
+                Back to Register
+              </button>
+            </div>
           </div>
         )}
         {!showVerification && (

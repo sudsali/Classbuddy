@@ -27,6 +27,11 @@ def login(request):
     try:
         user = User.objects.get(email=email)
         if user.check_password(password):
+            if not user.is_verified and not user.is_superuser:  # Skip verification for superuser
+                return Response(
+                    {'error': 'Invalid credentials'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
             token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 'token': token.key,
@@ -43,13 +48,28 @@ def login(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
+    email = request.data.get('email')
+    
+    # Check if user exists and is not verified
+    try:
+        existing_user = User.objects.get(email=email)
+        if not existing_user.is_verified and not existing_user.is_superuser:
+            # Delete the unverified user
+            existing_user.delete()
+        else:
+            return Response(
+                {'error': 'User with this email already exists.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    except User.DoesNotExist:
+        pass
+
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        token, _ = Token.objects.get_or_create(user=user)
         return Response({
-            'token': token.key,
-            'user': UserSerializer(user).data
+            'message': 'Registration successful. Please verify your email.',
+            'email': user.email
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -59,8 +79,11 @@ def verify_email(request):
     email = request.data.get('email')
     code = request.data.get('code')
 
-    if not email or not code:
-        return Response({'error': 'Email and code are required.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not email:
+        return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not code:
+        return Response({'error': 'Invalid verification code.'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         user = User.objects.get(email=email)
@@ -68,7 +91,12 @@ def verify_email(request):
             user.is_verified = True
             user.verification_code = ''
             user.save()
-            return Response({'message': 'Email verified successfully!'}, status=status.HTTP_200_OK)
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                'message': 'Email verified successfully!',
+                'token': token.key,
+                'user': UserSerializer(user).data
+            }, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid verification code.'}, status=status.HTTP_400_BAD_REQUEST)
     except User.DoesNotExist:
