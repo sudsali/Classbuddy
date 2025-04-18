@@ -39,6 +39,27 @@ class StudyGroupViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return StudyGroup.objects.all().prefetch_related('members')
 
+    def update(self, request, *args, **kwargs):
+        group = self.get_object()
+        if group.creator != request.user:
+            return Response(
+                {'detail': 'Only the group creator can update group properties.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Only allow updating specific fields
+        allowed_fields = {'name', 'description', 'subject', 'max_members'}
+        update_data = {k: v for k, v in request.data.items() if k in allowed_fields}
+        
+        serializer = self.get_serializer(group, data=update_data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response(serializer.data)
+
+    def partial_update(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'])
     def join(self, request, pk=None):
         group = self.get_object()

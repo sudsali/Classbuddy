@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.timezone import now
-from django.core.validators import MinLengthValidator, MaxLengthValidator
+from django.core.validators import MinLengthValidator, MaxLengthValidator, MinValueValidator, MaxValueValidator
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -30,7 +30,14 @@ class StudyGroup(models.Model):
         help_text="Detailed description of group purpose"
     )
     subject = models.CharField(max_length=100)
-    max_members = models.IntegerField(default=5)
+    max_members = models.IntegerField(
+        default=5,
+        validators=[
+            MinValueValidator(2, message="Maximum members must be at least 2"),
+            MaxValueValidator(10, message="Maximum members cannot exceed 10")
+        ],
+        help_text="Number of maximum members (2-10)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups')
     members = models.ManyToManyField(User, related_name='joined_groups')

@@ -29,7 +29,25 @@ class StudyGroupSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'subject', 'max_members', 
                  'created_at', 'creator', 'creator_details', 'members', 
                  'members_count', 'is_member', 'is_creator']
-        read_only_fields = ['creator', 'created_at']
+        read_only_fields = ['creator', 'created_at', 'members_count']
+
+    def validate_max_members(self, value):
+        if value < 2:
+            raise serializers.ValidationError("Maximum members must be at least 2")
+        
+        # When updating, check against current member count
+        if self.instance:  # This means we're updating an existing group
+            current_members = self.instance.members.count()
+            if value < current_members:
+                raise serializers.ValidationError(
+                    f"Maximum members cannot be less than current member count ({current_members})"
+                )
+        return value
+
+    def validate_name(self, value):
+        if len(value.strip()) < 3:
+            raise serializers.ValidationError("Group name must be at least 3 characters long")
+        return value.strip()
 
     def get_is_member(self, obj):
         request = self.context.get('request')

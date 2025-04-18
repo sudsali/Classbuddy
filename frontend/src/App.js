@@ -1,10 +1,10 @@
-
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Profile from './pages/Profile';
 import Sidebar from './components/Sidebar';
 import Groups from './pages/Groups';  // Import the actual Groups component
 import './styles/theme.css';
@@ -49,6 +49,7 @@ const App = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/" element={<Navigate to="/groups" replace />} />
           <Route path="/meetings" element={<PrivateRoute><Meetings /></PrivateRoute>} />
           <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />

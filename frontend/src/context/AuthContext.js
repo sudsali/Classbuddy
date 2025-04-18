@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = sessionStorage.getItem('token');
     if (token) {
-      axios.get('http://127.0.0.1:8000/api/users/user/', {
+      axios.get('http://127.0.0.1:8000/api/users/profile/', {
         headers: { Authorization: `Token ${token}` }
       })
       .then(response => {
@@ -67,13 +67,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (userData) => {
+    setUser(userData);
+  };
+
   const logout = () => {
     sessionStorage.removeItem('token');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

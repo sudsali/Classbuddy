@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './Groups.css';
+import { FaPencilAlt } from 'react-icons/fa';
 
 const Groups = () => {
   const [groups, setGroups] = useState([]);
@@ -10,7 +11,10 @@ const Groups = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
   const [newGroup, setNewGroup] = useState({
     name: '',
     description: '',
@@ -20,6 +24,12 @@ const Groups = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [messagePollingInterval, setMessagePollingInterval] = useState(null);
+  const [editGroupData, setEditGroupData] = useState({
+    name: '',
+    description: '',
+    subject: '',
+    max_members: 5
+  });
   const { user } = useAuth();
 
   useEffect(() => {
@@ -181,6 +191,61 @@ const Groups = () => {
     }
   };
 
+  const handleUpdateGroupTitle = async () => {
+    try {
+      await axios.patch(
+        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/`,
+        { name: editedTitle },
+        {
+          headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
+        }
+      );
+      setSelectedGroup({ ...selectedGroup, name: editedTitle });
+      setIsEditingTitle(false);
+      fetchGroups(); // Refresh the groups list
+    } catch (error) {
+      console.error('Error updating group title:', error);
+      if (error.response?.data?.detail) {
+        alert(error.response.data.detail);
+      } else {
+        alert('Failed to update group title. Please try again.');
+      }
+    }
+  };
+
+  const handleEditGroup = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.patch(
+        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/`,
+        editGroupData,
+        {
+          headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
+        }
+      );
+      setShowEditModal(false);
+      setSelectedGroup({ ...selectedGroup, ...editGroupData });
+      fetchGroups(); // Refresh the groups list
+    } catch (error) {
+      console.error('Error updating group:', error);
+      if (error.response?.data?.detail) {
+        alert(error.response.data.detail);
+      } else {
+        alert('Failed to update group. Please try again.');
+      }
+    }
+  };
+
+  const openEditModal = (group) => {
+    setEditGroupData({
+      name: group.name,
+      description: group.description,
+      subject: group.subject,
+      max_members: group.max_members
+    });
+    setShowEditModal(true);
+  };
+
   if (loading) {
     return (
       <div className="groups-container">
@@ -326,9 +391,23 @@ const Groups = () => {
       )}
 
       {showMembersModal && selectedGroup && (
-        <div className="modal-overlay" onClick={() => setShowMembersModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2>{selectedGroup.name} - Members</h2>
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <div className="group-title-container">
+                <h2>{selectedGroup.name}</h2>
+                {selectedGroup.is_creator && (
+                  <button 
+                    className="edit-group-btn"
+                    onClick={() => openEditModal(selectedGroup)}
+                  >
+                    <FaPencilAlt />
+                    <span>Edit Group</span>
+                  </button>
+                )}
+              </div>
+              <h3>Members</h3>
+            </div>
             <div className="members-list">
               <table>
                 <colgroup>
@@ -382,8 +461,8 @@ const Groups = () => {
       )}
 
       {showChatModal && selectedGroup && (
-        <div className="modal-overlay" onClick={handleCloseChatModal}>
-          <div className="modal chat-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="modal chat-modal">
             <h2>{selectedGroup.name} - Chat Room</h2>
             <div className="chat-messages">
               {messages.map(message => (
@@ -423,6 +502,63 @@ const Groups = () => {
                 Close Chat
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showEditModal && selectedGroup && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Edit Group</h2>
+            <form onSubmit={handleEditGroup}>
+              <div className="form-group">
+                <label>Group Name</label>
+                <input
+                  type="text"
+                  value={editGroupData.name}
+                  onChange={(e) => setEditGroupData({...editGroupData, name: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Subject</label>
+                <input
+                  type="text"
+                  value={editGroupData.subject}
+                  onChange={(e) => setEditGroupData({...editGroupData, subject: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  value={editGroupData.description}
+                  onChange={(e) => setEditGroupData({...editGroupData, description: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Maximum Members</label>
+                <input
+                  type="number"
+                  min="2"
+                  max="10"
+                  value={editGroupData.max_members}
+                  onChange={(e) => setEditGroupData({...editGroupData, max_members: parseInt(e.target.value)})}
+                  required
+                />
+              </div>
+              <div className="modal-buttons">
+                <button type="submit" className="save-btn">Save Changes</button>
+                <button 
+                  type="button" 
+                  className="cancel-btn"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -34,9 +34,58 @@
   color: var(--primary);
 }
 
+.user-profile {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.profile-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.profile-link:hover {
+  background-color: var(--hover);
+}
+
+.profile-icon {
+  font-size: 1.5rem;
+  color: var(--primary);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.user-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-email {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .sidebar-nav {
   flex: 1;
   padding: 1rem 0;
+  overflow-y: auto;
 }
 
 .nav-item {
@@ -82,51 +131,36 @@
 .nav-text {
   margin-left: 1rem;
   font-size: 1rem;
+  color: var(--text-primary);
   transition: color 0.2s ease;
 }
 
-.user-section {
-  padding: 1rem 0;
+.logout-container {
+  padding: 1rem;
   border-top: 1px solid var(--border);
-}
-
-.user-profile {
-  padding: 0.5rem 1.5rem;
-  display: flex;
-  align-items: center;
-  color: var(--text-primary);
-}
-
-.user-icon {
-  font-size: 1.2rem;
-  color: var(--text-secondary);
-}
-
-.user-name {
-  margin-left: 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
+  margin-top: auto;
 }
 
 .logout-button {
   width: 100%;
-  padding: 0.5rem 1.5rem;
+  padding: 0.75rem;
   display: flex;
   align-items: center;
-  background: none;
+  gap: 1rem;
+  background-color: #ea4335;
   border: none;
-  color: var(--text-secondary);
+  border-radius: 8px;
+  color: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 .logout-button:hover {
-  background-color: var(--hover);
-  color: var(--text-primary);
+  background-color: #d93025;
 }
 
 .logout-icon {
   font-size: 1.2rem;
-  margin-right: 1rem;
 } 
