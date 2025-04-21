@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import Groups from './pages/Groups';  // Import the actual Groups component
 import './styles/theme.css';
 import './App.css';
+import ForgotPassword from './pages/ForgetPassword';
 
 // Import your other page components here
 const Meetings = () => <div>Meeting Planner</div>;
@@ -49,6 +50,7 @@ const App = () => {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/" element={<Navigate to="/groups" replace />} />
           <Route path="/meetings" element={<PrivateRoute><Meetings /></PrivateRoute>} />

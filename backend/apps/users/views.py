@@ -6,11 +6,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
 from .serializers import UserSerializer, RegisterSerializer
 
 User = get_user_model()
-
-# Create your views here.
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -27,7 +27,7 @@ def login(request):
     try:
         user = User.objects.get(email=email)
         if user.check_password(password):
-            if not user.is_verified and not user.is_superuser:  # Skip verification for superuser
+            if not user.is_verified and not user.is_superuser:
                 return Response(
                     {'error': 'Invalid credentials'},
                     status=status.HTTP_401_UNAUTHORIZED
@@ -49,12 +49,9 @@ def login(request):
 @permission_classes([AllowAny])
 def register(request):
     email = request.data.get('email')
-    
-    # Check if user exists and is not verified
     try:
         existing_user = User.objects.get(email=email)
         if not existing_user.is_verified and not existing_user.is_superuser:
-            # Delete the unverified user
             existing_user.delete()
         else:
             return Response(
@@ -72,7 +69,7 @@ def register(request):
             'email': user.email
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def verify_email(request):
@@ -114,3 +111,48 @@ def profile(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def send_reset_code(request):
+    email = request.data.get('email')
+    if not email:
+        return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.get(email=email)
+        code = get_random_string(length=6, allowed_chars='0123456789')
+        user.reset_code = code
+        user.save()
+        send_mail(
+            'Reset Your Password',
+            f'Your password reset code is: {code}',
+            'ClassBuddy <no-reply@classbuddy.dev>',
+            [user.email],
+            fail_silently=False
+        )
+        return Response({'message': 'Password reset code sent.'})
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request):
+    email = request.data.get('email')
+    code = request.data.get('code')
+    new_password = request.data.get('new_password')
+
+    if not all([email, code, new_password]):
+        return Response({'error': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.get(email=email)
+        if user.reset_code == code:
+            user.set_password(new_password)
+            user.reset_code = ''
+            user.save()
+            return Response({'message': 'Password reset successfully.'})
+        else:
+            return Response({'error': 'Invalid reset code.'}, status=status.HTTP_400_BAD_REQUEST)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)

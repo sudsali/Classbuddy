@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
@@ -11,7 +11,7 @@ const Register = () => {
     firstName: '',
     lastName: '',
   });
-  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationCode, setVerificationCode] = useState(Array(6).fill(''));
   const [emailForVerification, setEmailForVerification] = useState('');
   const [showVerification, setShowVerification] = useState(false);
   const [error, setError] = useState('');
@@ -19,6 +19,7 @@ const Register = () => {
   const [step, setStep] = useState('register');
   const { register } = useAuth();
   const navigate = useNavigate();
+  const inputRefs = useRef([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,12 +33,12 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setSuccess(false);
-  
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-  
+
     const userData = {
       email: formData.email,
       password: formData.password,
@@ -45,20 +46,33 @@ const Register = () => {
       first_name: formData.firstName,
       last_name: formData.lastName
     };
-  
+
     const result = await register(userData);
-  
+
     if (result.success) {
-      setEmailForVerification(formData.email); // 🔑 set email for verify API
-      setShowVerification(true); // ✅ show verification input
+      setEmailForVerification(formData.email);
+      setShowVerification(true);
     } else {
       setError(result.error || 'Registration failed');
     }
   };
-  
-  
+
+  const handleVerifyChange = (e, index) => {
+    const value = e.target.value;
+    if (!/^[0-9]*$/.test(value)) return;
+
+    const newCode = [...verificationCode];
+    newCode[index] = value.slice(-1);
+    setVerificationCode(newCode);
+
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
   const handleVerify = async () => {
     try {
+      const code = verificationCode.join('');
       const response = await fetch("http://localhost:8000/api/users/verify/", {
         method: "POST",
         headers: {
@@ -66,19 +80,17 @@ const Register = () => {
         },
         body: JSON.stringify({
           email: emailForVerification,
-          code: verificationCode
+          code: code
         })
       });
 
       const data = await response.json();
       if (response.ok) {
-        // Store token and user data upon successful verification
         if (data.token) {
           sessionStorage.setItem('token', data.token);
         }
         setSuccess(true);
         setShowVerification(false);
-        // Redirect to login page after successful verification
         setTimeout(() => {
           navigate('/login');
         }, 2000);
@@ -111,58 +123,23 @@ const Register = () => {
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="firstName">First Name</label>
-              <input
-                type="text"
-                id="firstName"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                required
-              />
+              <input type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required />
             </div>
             <div className="form-group">
               <label htmlFor="lastName">Last Name</label>
-              <input
-                type="text"
-                id="lastName"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                required
-              />
+              <input type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} required />
             </div>
             <div className="form-group">
               <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
+              <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required />
             </div>
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-              />
+              <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} required />
             </div>
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-              />
+              <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
             </div>
             <button type="submit" className="auth-button">Register</button>
           </form>
@@ -170,23 +147,22 @@ const Register = () => {
           <div className="verification-container">
             <h3>Verify your email</h3>
             <p className="verification-email">Verification code sent to: {emailForVerification}</p>
-            <input
-              type="text"
-              placeholder="Enter verification code"
-              value={verificationCode}
-              onChange={(e) => setVerificationCode(e.target.value)}
-            />
+            <div className="code-input-wrapper">
+              {verificationCode.map((char, index) => (
+                <input
+                  key={index}
+                  type="text"
+                  maxLength="1"
+                  value={char}
+                  ref={(el) => (inputRefs.current[index] = el)}
+                  onChange={(e) => handleVerifyChange(e, index)}
+                  className="code-input"
+                />
+              ))}
+            </div>
             <div className="verification-buttons">
               <button onClick={handleVerify} className="auth-button">Verify Email</button>
-              <button 
-                onClick={() => {
-                  setShowVerification(false);
-                  setError('');
-                }} 
-                className="auth-button secondary"
-              >
-                Back to Register
-              </button>
+              <button onClick={() => { setShowVerification(false); setError(''); }} className="auth-button secondary">Back to Register</button>
             </div>
           </div>
         )}
