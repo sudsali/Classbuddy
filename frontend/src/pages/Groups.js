@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './Groups.css';
-import { FaPencilAlt } from 'react-icons/fa';
+import { FaPencilAlt, FaPaperclip, FaDownload, FaTrash } from 'react-icons/fa';
 
 const Groups = () => {
   const [groups, setGroups] = useState([]);
@@ -30,6 +30,8 @@ const Groups = () => {
     subject: '',
     max_members: 5
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -244,6 +246,168 @@ const Groups = () => {
       max_members: group.max_members
     });
     setShowEditModal(true);
+  };
+
+  const handleFileUpload = async (e) => {
+    e.preventDefault();
+    if (!selectedFile || !selectedGroup) return;
+
+    setUploadingFile(true);
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      console.log('Starting file upload process for file:', selectedFile.name);
+      console.log('Selected group ID:', selectedGroup.id);
+      
+      // First create a message with the file name using the create_message action
+      const messageResponse = await axios.post(
+        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/create_message/`,
+        { content: `Uploaded file: ${selectedFile.name}` },
+        {
+          headers: {
+            'Authorization': `Token ${sessionStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Message created:', messageResponse.data); // Debug log
+
+      // Then attach the file to the created message
+      const messageId = messageResponse.data.id;
+      if (!messageId) {
+        throw new Error('No message ID received from server');
+      }
+      
+      console.log('Message ID for file upload:', messageId);
+      console.log('File to upload:', selectedFile);
+
+      // Upload the file using the correct URL structure
+      const uploadUrl = `http://127.0.0.1:8000/api/study-groups/messages/${messageId}/upload_file/`;
+      console.log('Upload URL:', uploadUrl);
+      
+      const uploadResponse = await axios.post(
+        uploadUrl,
+        formData,
+        {
+          headers: {
+            'Authorization': `Token ${sessionStorage.getItem('token')}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      console.log('File uploaded:', uploadResponse.data); // Debug log
+      
+      // Reset the file input value to allow selecting the same file again
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      
+      setSelectedFile(null);
+      fetchMessages(selectedGroup.id);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+        alert(error.response.data.detail || 'Failed to upload file. Please try again.');
+      } else {
+        alert('Failed to upload file. Please try again.');
+      }
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleFileDownload = async (fileId) => {
+    try {
+      console.log('Downloading file with ID:', fileId);
+      
+      // First, get the file details to get the original filename
+      const fileDetailsResponse = await axios.get(
+        `http://127.0.0.1:8000/api/study-groups/messages/download_file/?file_id=${fileId}`,
+        {
+          headers: { Authorization: `Token ${sessionStorage.getItem('token')}` },
+          responseType: 'blob'
+        }
+      );
+      
+      console.log('Download response headers:', fileDetailsResponse.headers);
+      
+      // Extract filename from Content-Disposition header
+      let filename = 'downloaded-file';
+      const contentDisposition = fileDetailsResponse.headers['content-disposition'];
+      console.log('Content-Disposition header:', contentDisposition);
+      
+      if (contentDisposition) {
+        // Try different patterns to extract the filename
+        let filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (!filenameMatch) {
+          filenameMatch = contentDisposition.match(/filename=([^;]+)/);
+        }
+        
+        if (filenameMatch && filenameMatch[1]) {
+          filename = decodeURIComponent(filenameMatch[1].replace(/"/g, ''));
+          console.log('Extracted filename from Content-Disposition:', filename);
+        } else {
+          console.log('Could not extract filename from Content-Disposition');
+        }
+      } else {
+        console.log('No Content-Disposition header found');
+        
+        // If Content-Disposition header is missing, try to get the filename from the URL
+        // or use a default name based on the file ID
+        filename = `file-${fileId}`;
+        console.log('Using default filename:', filename);
+      }
+      
+      // Create a blob with the correct type
+      const contentType = fileDetailsResponse.headers['content-type'] || 'application/octet-stream';
+      console.log('Content-Type:', contentType);
+      
+      const blob = new Blob([fileDetailsResponse.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      link.remove();
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      }
+      alert('Failed to download file. Please try again.');
+    }
+  };
+
+  const handleFileDelete = async (messageId, fileId) => {
+    if (!window.confirm('Are you sure you want to delete this file?')) return;
+
+    try {
+      await axios.delete(
+        `http://127.0.0.1:8000/api/study-groups/messages/${messageId}/delete_file/?file_id=${fileId}`,
+        {
+          headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
+        }
+      );
+      
+      fetchMessages(selectedGroup.id);
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      alert('Failed to delete file. Please try again.');
+    }
   };
 
   if (loading) {
@@ -479,6 +643,33 @@ const Groups = () => {
                     </span>
                   </div>
                   <div className="message-content">{message.content}</div>
+                  {message.attachments && message.attachments.length > 0 && (
+                    <div className="message-attachments">
+                      {message.attachments.map(attachment => (
+                        <div key={attachment.id} className="attachment-item">
+                          <span className="attachment-name">{attachment.original_filename}</span>
+                          <div className="attachment-actions">
+                            <button
+                              onClick={() => handleFileDownload(attachment.id)}
+                              className="attachment-btn"
+                              title="Download"
+                            >
+                              <FaDownload />
+                            </button>
+                            {(message.sender.id === user.id || attachment.uploaded_by.id === user.id) && (
+                              <button
+                                onClick={() => handleFileDelete(message.id, attachment.id)}
+                                className="attachment-btn delete"
+                                title="Delete"
+                              >
+                                <FaTrash />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -490,9 +681,37 @@ const Groups = () => {
                 placeholder="Type your message..."
                 className="chat-input-field"
               />
-              <button type="submit" className="chat-send-btn">
-                Send
-              </button>
+              <div className="chat-actions">
+                <label className="file-upload-btn">
+                  <input
+                    type="file"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setSelectedFile(e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                    key={selectedFile ? 'file-selected' : 'no-file'}
+                  />
+                  <FaPaperclip />
+                </label>
+                {selectedFile && (
+                  <div className="file-upload-form">
+                    <span className="selected-file-name">{selectedFile.name}</span>
+                    <button 
+                      type="button" 
+                      className="upload-btn"
+                      onClick={handleFileUpload}
+                      disabled={uploadingFile}
+                    >
+                      {uploadingFile ? 'Uploading...' : 'Upload'}
+                    </button>
+                  </div>
+                )}
+                <button type="submit" className="chat-send-btn">
+                  Send
+                </button>
+              </div>
             </form>
             <div className="modal-buttons">
               <button 

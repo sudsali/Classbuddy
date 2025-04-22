@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StudyGroup, ChatMessage
+from .models import StudyGroup, ChatMessage, FileAttachment
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -9,12 +9,28 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'first_name', 'last_name']
 
+class FileAttachmentSerializer(serializers.ModelSerializer):
+    uploaded_by = UserSerializer(read_only=True)
+    download_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = FileAttachment
+        fields = ['id', 'original_filename', 'file_size', 'uploaded_at', 'uploaded_by', 'download_url']
+        read_only_fields = ['uploaded_by', 'uploaded_at']
+    
+    def get_download_url(self, obj):
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.file.url)
+        return None
+
 class ChatMessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
+    attachments = FileAttachmentSerializer(many=True, read_only=True)
     
     class Meta:
         model = ChatMessage
-        fields = ['id', 'study_group', 'sender', 'content', 'timestamp']
+        fields = ['id', 'study_group', 'sender', 'content', 'timestamp', 'attachments']
         read_only_fields = ['sender', 'timestamp']
 
 class StudyGroupSerializer(serializers.ModelSerializer):
