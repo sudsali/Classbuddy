@@ -698,14 +698,24 @@ const Groups = () => {
                 {selectedFile && (
                   <div className="file-upload-form">
                     <span className="selected-file-name">{selectedFile.name}</span>
-                    <button 
-                      type="button" 
-                      className="upload-btn"
-                      onClick={handleFileUpload}
-                      disabled={uploadingFile}
-                    >
-                      {uploadingFile ? 'Uploading...' : 'Upload'}
-                    </button>
+                    <div className="file-upload-buttons">
+                      <button 
+                        type="button" 
+                        className="upload-btn"
+                        onClick={handleFileUpload}
+                        disabled={uploadingFile}
+                      >
+                        {uploadingFile ? 'Uploading...' : 'Upload'}
+                      </button>
+                      <button 
+                        type="button" 
+                        className="clear-btn"
+                        onClick={() => setSelectedFile(null)}
+                        disabled={uploadingFile}
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
                 )}
                 <button type="submit" className="chat-send-btn">
