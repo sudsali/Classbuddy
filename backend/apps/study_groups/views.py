@@ -187,6 +187,46 @@ class ChatMessageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    @action(detail=False, methods=['get'])
+    def search_messages(self, request, group_id=None):
+        """Search messages in a specific group."""
+        try:
+            group = StudyGroup.objects.get(id=group_id)
+            if request.user not in group.members.all():
+                return Response(
+                    {"detail": "You must be a member of the group to search messages."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            query = request.query_params.get('q', '')
+            if not query:
+                return Response(
+                    {"detail": "Search query is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            print(f"Searching messages in group {group_id} for query: {query}")
+            messages = ChatMessage.objects.filter(
+                study_group=group,
+                content__icontains=query
+            ).order_by('-timestamp')
+            print(f"Found {messages.count()} messages")
+            
+            serializer = ChatMessageSerializer(messages, many=True)
+            return Response(serializer.data)
+            
+        except StudyGroup.DoesNotExist:
+            return Response(
+                {"detail": f"Study group with id {group_id} not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            print(f"Error in search_messages: {str(e)}")
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 class StudyGroupViewSet(viewsets.ModelViewSet):
     queryset = StudyGroup.objects.all()
     serializer_class = StudyGroupSerializer

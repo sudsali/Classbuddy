@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './Groups.css';
-import { FaPencilAlt, FaPaperclip, FaDownload, FaTrash } from 'react-icons/fa';
+import { FaPencilAlt, FaPaperclip, FaDownload, FaTrash, FaSearch } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
 
 const Groups = () => {
   const [groups, setGroups] = useState([]);
@@ -33,6 +34,10 @@ const Groups = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearchFormVisible, setIsSearchFormVisible] = useState(false);
 
   useEffect(() => {
     fetchGroups();
@@ -187,6 +192,9 @@ const Groups = () => {
   const handleCloseChatModal = () => {
     setShowChatModal(false);
     setMessages([]);
+    setIsSearchFormVisible(false);
+    setSearchQuery('');
+    setSearchResults([]);
     if (messagePollingInterval) {
       clearInterval(messagePollingInterval);
       setMessagePollingInterval(null);
@@ -410,6 +418,56 @@ const Groups = () => {
     }
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      console.log('Searching messages in group:', selectedGroup.id);
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/search_messages/?q=${encodeURIComponent(searchQuery)}`,
+        {
+          headers: { 
+            Authorization: `Token ${sessionStorage.getItem('token')}` 
+          }
+        }
+      );
+      console.log('Search response:', response.data);
+      setSearchResults(response.data);
+      if (response.data.length === 0) {
+        toast.info('No messages found matching your search.');
+      }
+    } catch (error) {
+      console.error('Error searching messages:', error);
+      toast.error(error.response?.data?.detail || 'Failed to search messages. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setIsSearching(false);
+    setIsSearchFormVisible(false);
+  };
+
+  const toggleSearch = () => {
+    setIsSearchFormVisible(!isSearchFormVisible);
+    if (!isSearchFormVisible) {
+      setSearchQuery('');
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  };
+
+  const highlightSearchText = (text, searchQuery) => {
+    if (!searchQuery) return text;
+    const regex = new RegExp(`(${searchQuery})`, 'gi');
+    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+  };
+
   if (loading) {
     return (
       <div className="groups-container">
@@ -627,52 +685,146 @@ const Groups = () => {
       {showChatModal && selectedGroup && (
         <div className="modal-overlay">
           <div className="modal chat-modal">
-            <h2>{selectedGroup.name} - Chat Room</h2>
-            <div className="chat-messages">
-              {messages.map(message => (
-                <div 
-                  key={message.id} 
-                  className={`message ${message.sender.id === user.id ? 'message-own' : 'message-other'}`}
-                >
-                  <div className="message-header">
-                    <span className="message-sender">
-                      {message.sender.first_name} {message.sender.last_name}
-                    </span>
-                    <span className="message-time">
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <div className="message-content">{message.content}</div>
-                  {message.attachments && message.attachments.length > 0 && (
-                    <div className="message-attachments">
-                      {message.attachments.map(attachment => (
-                        <div key={attachment.id} className="attachment-item">
-                          <span className="attachment-name">{attachment.original_filename}</span>
-                          <div className="attachment-actions">
-                            <button
-                              onClick={() => handleFileDownload(attachment.id)}
-                              className="attachment-btn"
-                              title="Download"
-                            >
-                              <FaDownload />
-                            </button>
-                            {(message.sender.id === user.id || attachment.uploaded_by.id === user.id) && (
-                              <button
-                                onClick={() => handleFileDelete(message.id, attachment.id)}
-                                className="attachment-btn delete"
-                                title="Delete"
-                              >
-                                <FaTrash />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="chat-header">
+              <h2>{selectedGroup.name}</h2>
+              <button className="search-toggle" onClick={toggleSearch}>
+                <FaSearch />
+              </button>
             </div>
+            
+            <div className="chat-search">
+              <form 
+                className={`search-form ${isSearchFormVisible ? 'visible' : ''}`}
+                onSubmit={handleSearch}
+              >
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search messages..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button 
+                  type="submit" 
+                  className="search-button"
+                  disabled={!searchQuery.trim() || isSearching}
+                >
+                  {isSearching ? 'Searching...' : 'Search'}
+                </button>
+                <button 
+                  type="button" 
+                  className="clear-search-button"
+                  onClick={clearSearch}
+                >
+                  Clear
+                </button>
+              </form>
+            </div>
+
+            <div className="messages">
+              {searchResults.length > 0 ? (
+                <div className="search-results-container">
+                  <div className="search-results-header">
+                    <span className="search-results-title">Search Results</span>
+                    <span className="search-results-count">{searchResults.length} message(s) found</span>
+                  </div>
+                  {searchResults.map((message) => (
+                    <div key={message.id} className="search-result-item">
+                      <div className="message-header">
+                        <span className="message-sender">
+                          {message.sender.first_name} {message.sender.last_name}
+                        </span>
+                        <span className="message-time">
+                          {new Date(message.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+                      <div 
+                        className="message-content"
+                        dangerouslySetInnerHTML={{
+                          __html: highlightSearchText(message.content, searchQuery)
+                        }}
+                      />
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="message-attachments">
+                          {message.attachments.map(attachment => (
+                            <div key={attachment.id} className="attachment-item">
+                              <span className="attachment-name">{attachment.original_filename}</span>
+                              <div className="attachment-actions">
+                                <button
+                                  onClick={() => handleFileDownload(attachment.id)}
+                                  className="attachment-btn"
+                                  title="Download"
+                                >
+                                  <FaDownload />
+                                </button>
+                                {(message.sender.id === user.id || attachment.uploaded_by.id === user.id) && (
+                                  <button
+                                    onClick={() => handleFileDelete(message.id, attachment.id)}
+                                    className="attachment-btn delete"
+                                    title="Delete"
+                                  >
+                                    <FaTrash />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : searchQuery && !isSearching ? (
+                <div className="no-results-message">
+                  No messages found matching your search.
+                </div>
+              ) : (
+                messages.map((message) => (
+                  <div 
+                    key={message.id} 
+                    className={`message ${message.sender.id === user.id ? 'message-own' : 'message-other'}`}
+                  >
+                    <div className="message-header">
+                      <span className="message-sender">
+                        {message.sender.first_name} {message.sender.last_name}
+                      </span>
+                      <span className="message-time">
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <div className="message-content">{message.content}</div>
+                    {message.attachments && message.attachments.length > 0 && (
+                      <div className="message-attachments">
+                        {message.attachments.map(attachment => (
+                          <div key={attachment.id} className="attachment-item">
+                            <span className="attachment-name">{attachment.original_filename}</span>
+                            <div className="attachment-actions">
+                              <button
+                                onClick={() => handleFileDownload(attachment.id)}
+                                className="attachment-btn"
+                                title="Download"
+                              >
+                                <FaDownload />
+                              </button>
+                              {(message.sender.id === user.id || attachment.uploaded_by.id === user.id) && (
+                                <button
+                                  onClick={() => handleFileDelete(message.id, attachment.id)}
+                                  className="attachment-btn delete"
+                                  title="Delete"
+                                >
+                                  <FaTrash />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
             <form onSubmit={sendMessage} className="chat-input">
               <input
                 type="text"
@@ -723,11 +875,9 @@ const Groups = () => {
                 </button>
               </div>
             </form>
+
             <div className="modal-buttons">
-              <button 
-                className="cancel-btn"
-                onClick={handleCloseChatModal}
-              >
+              <button className="cancel-btn" onClick={handleCloseChatModal}>
                 Close Chat
               </button>
             </div>
