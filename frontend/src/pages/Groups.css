@@ -527,8 +527,14 @@
 .group-title-container {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.group-title-container h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
 }
 
 .edit-title-btn {
@@ -599,19 +605,19 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: none;
-  border: 1px solid #6c757d;
-  color: #6c757d;
-  cursor: pointer;
-  padding: 6px 12px;
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
   border-radius: 4px;
+  color: #495057;
+  cursor: pointer;
   font-size: 0.9rem;
   transition: all 0.2s ease;
 }
 
 .edit-group-btn:hover {
-  background-color: #6c757d;
-  color: white;
+  background-color: #e9ecef;
+  color: #212529;
 }
 
 .edit-group-btn svg {

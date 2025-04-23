@@ -316,15 +316,16 @@ const Groups = () => {
       
       setSelectedFile(null);
       fetchMessages(selectedGroup.id);
+      toast.success('File uploaded successfully!');
     } catch (error) {
       console.error('Error uploading file:', error);
       if (error.response) {
         console.error('Error response:', error.response.data);
         console.error('Error status:', error.response.status);
         console.error('Error headers:', error.response.headers);
-        alert(error.response.data.detail || 'Failed to upload file. Please try again.');
+        toast.error(error.response.data.detail || 'Failed to upload file. Please try again.');
       } else {
-        alert('Failed to upload file. Please try again.');
+        toast.error('Failed to upload file. Please try again.');
       }
     } finally {
       setUploadingFile(false);
