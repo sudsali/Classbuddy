@@ -74,7 +74,8 @@ INSTALLED_APPS = [
     'apps.study_groups.apps.StudyGroupsConfig',
     'apps.files.apps.FilesConfig',
     'apps.meetings.apps.MeetingsConfig',
-    'apps.notifications.apps.NotificationsConfig'
+    'apps.notifications.apps.NotificationsConfig',
+    'apps.group_tasks.apps.GroupTasksConfig'
 ]
 
 AUTH_USER_MODEL = 'users.User'

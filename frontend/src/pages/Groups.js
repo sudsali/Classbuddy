@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import './Groups.css';
 import { FaPencilAlt, FaPaperclip, FaDownload, FaTrash, FaSearch } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import TaskBoard from '../components/TaskBoard';
 
 const Groups = () => {
   const [groups, setGroups] = useState([]);
@@ -13,6 +14,7 @@ const Groups = () => {
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showTasksModal, setShowTasksModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
@@ -672,6 +674,17 @@ const Groups = () => {
                   Enter Chat Room
                 </button>
               )}
+              {selectedGroup && selectedGroup.is_member && (
+                <button 
+                  className="tasks-btn"
+                  onClick={() => {
+                    setShowMembersModal(false);
+                    setShowTasksModal(true);
+                  }}
+                >
+                  Show Tasks
+                </button>
+              )}
               <button 
                 className="cancel-btn"
                 onClick={() => setShowMembersModal(false)}
@@ -885,6 +898,26 @@ const Groups = () => {
           </div>
         </div>
       )}
+
+      {showTasksModal && selectedGroup && (
+        <div className="modal-overlay" onClick={() => setShowTasksModal(false)}>
+          <div className="modal task-modal" onClick={e => e.stopPropagation()}>
+            <h2>{selectedGroup.name} - Tasks</h2>
+            <div className="task-board-container">
+              <TaskBoard groupId={selectedGroup.id} />
+            </div>
+            <div className="modal-buttons">
+              <button 
+                className="cancel-btn"
+                onClick={() => setShowTasksModal(false)}
+              >
+                Close Tasks
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {showEditModal && selectedGroup && (
         <div className="modal-overlay">
