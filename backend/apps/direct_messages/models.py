@@ -25,4 +25,15 @@ class DirectChat(models.Model):
         ordering = ['-updated_at']
         
     def __str__(self):
-        return f"Chat between {', '.join([p.get_full_name() for p in self.participants.all()])}" 
+        return f"Chat between {', '.join([p.get_full_name() for p in self.participants.all()])}"
+
+class DeletedChat(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deleted_chats')
+    chat = models.ForeignKey(DirectChat, on_delete=models.CASCADE, related_name='deleted_by_users')
+    deleted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'chat']
+        
+    def __str__(self):
+        return f"Chat {self.chat.id} deleted by {self.user.get_full_name()}" 

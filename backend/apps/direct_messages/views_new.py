@@ -110,35 +110,18 @@ class DirectChatViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
             
-        # Check if chat already exists and is not deleted
+        # Check if chat already exists
         existing_chat = DirectChat.objects.filter(
             participants=request.user
         ).filter(
             participants=other_user
-        ).exclude(
-            deleted_by_users__user=request.user
         ).first()
         
         if existing_chat:
             serializer = self.get_serializer(existing_chat)
             return Response(serializer.data)
             
-        # Check if there's a deleted chat that we can reuse
-        deleted_chat = DirectChat.objects.filter(
-            participants=request.user
-        ).filter(
-            participants=other_user
-        ).filter(
-            deleted_by_users__user=request.user
-        ).first()
-        
-        if deleted_chat:
-            # Remove the deleted mark and reuse the chat
-            DeletedChat.objects.filter(user=request.user, chat=deleted_chat).delete()
-            serializer = self.get_serializer(deleted_chat)
-            return Response(serializer.data)
-            
-        # Create new chat if no existing or deleted chat found
+        # Create new chat
         chat = DirectChat.objects.create()
         chat.participants.add(request.user, other_user)
         

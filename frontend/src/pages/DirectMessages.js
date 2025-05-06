@@ -79,22 +79,27 @@ const DirectMessages = () => {
         email: email.trim()
       });
       
-      // Only add to chats list if it has messages
-      if (response.data.last_message) {
-        setChats(prevChats => {
-          const chatExists = prevChats.some(chat => chat.id === response.data.id);
-          if (!chatExists) {
-            return [...prevChats, response.data];
-          }
-          return prevChats;
-        });
-      }
+      const chatData = response.data;
       
-      // Clear messages when starting a new chat
+      // Add to chats list regardless of messages
+      setChats(prevChats => {
+        const chatExists = prevChats.some(chat => chat.id === chatData.id);
+        if (!chatExists) {
+          return [...prevChats, chatData];
+        }
+        return prevChats;
+      });
+      
+      // Clear messages and set selected chat
       setMessages([]);
-      setSelectedChat(response.data);
+      setSelectedChat(chatData);
       setShowNewChatModal(false);
       setEmail('');
+      
+      // Fetch messages for the new chat
+      if (chatData.id) {
+        fetchMessages(chatData.id);
+      }
     } catch (error) {
       if (error.response) {
         setEmailError(error.response.data.error || 'Failed to start chat');
