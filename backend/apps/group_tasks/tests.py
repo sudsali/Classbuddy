@@ -172,18 +172,6 @@ class TaskViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Task.objects.count(), 1)
 
-    def test_move_task(self):
-        """Test moving a task to different status and position"""
-        data = {
-            'status': 'in_progress',
-            'position': 1
-        }
-        response = self.client.post(f'/api/group_tasks/{self.task1.id}/move/', data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.task1.refresh_from_db()
-        self.assertEqual(self.task1.status, 'in_progress')
-        self.assertEqual(self.task1.position, 1)
-
     def test_unauthorized_access(self):
         """Test unauthorized access to tasks"""
         self.client.force_authenticate(user=None)
@@ -203,3 +191,15 @@ class TaskViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['status'], 'in_progress')
+
+    def test_move_task(self):
+        """Test moving a task to different status and position"""
+        data = {
+            'status': 'in_progress',
+            'position': 1
+        }
+        response = self.client.post(f'/api/group_tasks/{self.task1.id}/move/', data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.task1.refresh_from_db()
+        self.assertEqual(self.task1.status, 'in_progress')
+        self.assertEqual(self.task1.position, 1)
