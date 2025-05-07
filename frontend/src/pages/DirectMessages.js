@@ -13,6 +13,7 @@ const DirectMessages = () => {
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [error, setError] = useState('');
   const [users, setUsers] = useState([]);
   const messagesEndRef = useRef(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
@@ -33,10 +34,12 @@ const DirectMessages = () => {
 
   const fetchChats = async () => {
     try {
+      setError('');
       const response = await axios.get('/api/direct-messages/chats/');
       setChats(response.data);
     } catch (error) {
       console.error('Error fetching chats:', error);
+      setError('Error fetching chats. Please try again later.');
     }
   };
 
@@ -162,6 +165,11 @@ const DirectMessages = () => {
 
   return (
     <div className="direct-messages-container">
+      {error && (
+        <div role="alert" className="error-banner">
+          {error}
+        </div>
+      )}
       <div className="chat-list">
         <div className="chat-list-header">
           <h2>Direct Messages</h2>
@@ -186,6 +194,7 @@ const DirectMessages = () => {
                   </span>
                   <button
                     className="delete-chat-btn"
+                    aria-label="Delete chat"
                     onClick={(e) => {
                       e.stopPropagation();
                       setChatToDelete(chat);
@@ -223,6 +232,7 @@ const DirectMessages = () => {
               {messages.map((message) => (
                 <div
                   key={message.id}
+                  role="article"
                   className={`message ${message.sender.id === user.id ? 'message-own' : 'message-other'}`}
                 >
                   <div className="message-header">
@@ -311,6 +321,7 @@ const DirectMessages = () => {
             <div className="modal-buttons">
               <button
                 className="delete-btn"
+                aria-label="Confirm delete chat"
                 onClick={() => handleDeleteChat(chatToDelete)}
               >
                 Delete

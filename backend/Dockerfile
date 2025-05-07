@@ -8,7 +8,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Convert line endings and make deploy script executable
+RUN sed -i 's/\r$//' deploy.sh && \
+    chmod +x deploy.sh
+
 EXPOSE 8000
 
-# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-CMD ["/bin/bash", "deploy.sh"]
+CMD ["./deploy.sh"]
