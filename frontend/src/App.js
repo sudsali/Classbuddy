@@ -6,7 +6,8 @@ import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Sidebar from './components/Sidebar';
-import Groups from './pages/Groups';  // Import the actual Groups component
+import Groups from './pages/Groups';
+import MeetingPlanner from './pages/MeetingPlanner';
 import './styles/theme.css';
 import './App.css';
 
@@ -50,7 +51,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<Navigate to="/groups" replace />} />
-          <Route path="/meetings" element={<PrivateRoute><Meetings /></PrivateRoute>} />
+          <Route path="/meetings" element={<PrivateRoute><MeetingPlanner /></PrivateRoute>} />
           <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
           <Route path="/groups" element={<PrivateRoute><Groups /></PrivateRoute>} />
           <Route path="/bookmarks" element={<PrivateRoute><Bookmarks /></PrivateRoute>} />

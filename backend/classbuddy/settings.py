@@ -129,7 +129,7 @@ DATABASES = {
         'NAME': 'classbuddy_db',
         'USER': 'admin',
         'PASSWORD': 'segroup2',
-        'HOST': 'db',  # Changed to use Docker service name
+        'HOST': 'db',  # Using Docker service name
         'PORT': '5432',
     }
 }

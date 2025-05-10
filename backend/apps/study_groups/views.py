@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import StudyGroup, ChatMessage
-from .serializers import StudyGroupSerializer, ChatMessageSerializer
+from .serializers import StudyGroupSerializer, ChatMessageSerializer, UserSerializer
 
 # Create your views here.
 
@@ -38,6 +38,20 @@ class StudyGroupViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return StudyGroup.objects.all().prefetch_related('members')
+
+    @action(detail=True, methods=['get'])
+    def members(self, request, pk=None):
+        """Get all members of a study group."""
+        group = self.get_object()
+        if request.user not in group.members.all():
+            return Response(
+                {"detail": "You must be a member of the group to view members."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        members = group.members.all()
+        serializer = UserSerializer(members, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'])
     def join(self, request, pk=None):
