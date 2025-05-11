@@ -133,8 +133,8 @@ describe('MeetingPlanner Component', () => {
     expect(createMeeting).not.toHaveBeenCalled();
   });
 
-  // Time validation tests
-  test('validates time format', async () => {
+  // Time boundary tests
+  test('validates time boundaries', async () => {
     render(
       <MeetingProvider>
         <MeetingPlanner />
@@ -147,9 +147,7 @@ describe('MeetingPlanner Component', () => {
     });
     fireEvent.click(screen.getByText('Select Date'));
 
-    // Test invalid time format
-    const timeInput = screen.getByTestId('time-input');
-    fireEvent.change(timeInput, {
+    fireEvent.change(screen.getByLabelText(/time/i), {
       target: { value: '25:00' }, // Invalid time
     });
 

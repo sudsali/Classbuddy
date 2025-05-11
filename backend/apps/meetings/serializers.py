@@ -46,12 +46,15 @@ class MeetingSerializer(serializers.ModelSerializer):
             'invalid': 'Invalid study group selection'
         }
     )
+    date = serializers.DateField(required=False, allow_null=True)
+    time = serializers.TimeField(required=False, allow_null=True)
+    description = serializers.CharField(required=False, allow_blank=True)
     creator = UserSerializer(read_only=True)
     availability_slots = AvailabilitySlotSerializer(many=True, read_only=True)
 
     class Meta:
         model = Meeting
-        fields = ['id', 'title', 'study_group', 'study_group_id', 
+        fields = ['id', 'title', 'description', 'study_group', 'study_group_id', 
                  'creator', 'date', 'time', 'created_at', 'availability_slots']
         read_only_fields = ['creator', 'created_at']
         extra_kwargs = {
@@ -60,20 +63,6 @@ class MeetingSerializer(serializers.ModelSerializer):
                 'error_messages': {
                     'required': 'Please provide a meeting title',
                     'blank': 'Meeting title cannot be empty'
-                }
-            },
-            'date': {
-                'required': True,
-                'error_messages': {
-                    'required': 'Please provide a meeting date',
-                    'invalid': 'Invalid date format'
-                }
-            },
-            'time': {
-                'required': True,
-                'error_messages': {
-                    'required': 'Please provide a meeting time',
-                    'invalid': 'Invalid time format'
                 }
             }
         }

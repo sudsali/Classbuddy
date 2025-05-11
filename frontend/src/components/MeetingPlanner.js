@@ -10,8 +10,8 @@ const MeetingPlanner = () => {
   const { createMeeting, error: apiError } = useMeeting();
   const [formData, setFormData] = useState({
     title: '',
-    date: new Date(),
-    time: ''
+    description: '',
+    study_group_id: '',
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,22 +99,49 @@ const MeetingPlanner = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
+  
     try {
       setIsSubmitting(true);
       setSubmitError(null);
-      await createMeeting({
-        ...formData,
-        date: formData.date.toISOString().split('T')[0]
+  
+      const dateObj = formData.date instanceof Date
+        ? formData.date
+        : new Date(formData.date);
+  
+        const formattedDate = formData.date instanceof Date
+        ? formData.date.toISOString().split('T')[0]
+        : new Date(formData.date).toISOString().split('T')[0];
+       // "YYYY-MM-DD"
+      const formattedTime = formData.time.trim(); // Ensure no accidental whitespace
+  
+      // Optional: log for debug
+      console.log('Sending meeting data to API:', {
+        title: formData.title,
+        description: formData.description,
+        study_group_id: formData.study_group_id,  // adjust if your field is named differently
+        date: formattedDate,
+        time: formattedTime
       });
+  
+      await createMeeting({
+        title: formData.title,
+        description: formData.description,
+        study_group_id: formData.study_group_id,
+      });
+  
       navigate('/meetings');
     } catch (err) {
       console.error('Error creating meeting:', err);
+      if (err.response?.data) {
+        console.error('Error response data:', err.response.data);
+      }
       setSubmitError('Error creating meeting');
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  
 
   return (
     <div className="meeting-planner">
@@ -142,12 +169,6 @@ const MeetingPlanner = () => {
         <div className="form-group">
           <label htmlFor="date">Date</label>
           <div data-testid="date-picker">
-            <input
-              type="hidden"
-              id="date"
-              name="date"
-              value={formData.date}
-            />
             <div data-testid="mock-calendar">
               <Calendar
                 onChange={handleDateChange}

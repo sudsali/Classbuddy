@@ -19,8 +19,8 @@ class Meeting(models.Model):
         on_delete=models.CASCADE,
         related_name='created_meetings'
     )
-    date = models.DateField()
-    time = models.TimeField()
+    date = models.DateField(null=True, blank=True)  # <-- make nullable
+    time = models.TimeField(null=True, blank=True)  # <-- make nullable
     created_at = models.DateTimeField(auto_now_add=True)
 
     attendees = models.ManyToManyField(User, related_name='meeting_attendees', blank=True)
