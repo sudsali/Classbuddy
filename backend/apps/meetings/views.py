@@ -11,7 +11,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Create your views here.
+def send_notification(user, message):
+    """Send a notification to a user."""
+    # This is a placeholder for the actual notification logic
+    logger.info(f"Sending notification to {user.email}: {message}")
 
 class MeetingViewSet(viewsets.ModelViewSet):
     serializer_class = MeetingSerializer
@@ -28,7 +31,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
             # Get meetings where the user is a member of the study group
             meetings = Meeting.objects.filter(
                 study_group__members=self.request.user
-            ).select_related('study_group', 'created_by').prefetch_related('availability_slots')
+            ).select_related('study_group', 'creator').prefetch_related('availability_slots')
             
             logger.info(f"Found {meetings.count()} meetings")
             
@@ -67,7 +70,11 @@ class MeetingViewSet(viewsets.ModelViewSet):
                 logger.error(f"Serializer validation errors: {serializer.errors}")
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                 
-            self.perform_create(serializer)
+            meeting = serializer.save(creator=request.user)
+            
+            # Send notification
+            send_notification(request.user, f"Meeting '{meeting.title}' has been created")
+            
             headers = self.get_success_headers(serializer.data)
             logger.info(f"Successfully created meeting: {serializer.data}")
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -79,9 +86,9 @@ class MeetingViewSet(viewsets.ModelViewSet):
             )
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        serializer.save(creator=self.request.user)
 
-    @action(detail=True, methods=['get', 'post'])  # Added 'post' to allowed methods
+    @action(detail=True, methods=['get', 'post'])
     def availability(self, request, pk=None):
         try:
             meeting = self.get_object()

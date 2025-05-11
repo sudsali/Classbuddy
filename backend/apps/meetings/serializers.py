@@ -46,14 +46,14 @@ class MeetingSerializer(serializers.ModelSerializer):
             'invalid': 'Invalid study group selection'
         }
     )
-    created_by = UserSerializer(read_only=True)
+    creator = UserSerializer(read_only=True)
     availability_slots = AvailabilitySlotSerializer(many=True, read_only=True)
 
     class Meta:
         model = Meeting
-        fields = ['id', 'title', 'description', 'study_group', 'study_group_id', 
-                 'created_by', 'created_at', 'updated_at', 'availability_slots']
-        read_only_fields = ['created_by', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'study_group', 'study_group_id', 
+                 'creator', 'date', 'time', 'created_at', 'availability_slots']
+        read_only_fields = ['creator', 'created_at']
         extra_kwargs = {
             'title': {
                 'required': True,
@@ -62,9 +62,19 @@ class MeetingSerializer(serializers.ModelSerializer):
                     'blank': 'Meeting title cannot be empty'
                 }
             },
-            'description': {
-                'required': False,
-                'allow_blank': True
+            'date': {
+                'required': True,
+                'error_messages': {
+                    'required': 'Please provide a meeting date',
+                    'invalid': 'Invalid date format'
+                }
+            },
+            'time': {
+                'required': True,
+                'error_messages': {
+                    'required': 'Please provide a meeting time',
+                    'invalid': 'Invalid time format'
+                }
             }
         }
 
@@ -79,6 +89,6 @@ class MeetingSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Set the created_by field to the current user
-        validated_data['created_by'] = self.context['request'].user
+        # Set the creator field to the current user
+        validated_data['creator'] = self.context['request'].user
         return super().create(validated_data)
