@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Sidebar from './components/Sidebar';
 import Groups from './pages/Groups';  // Import the actual Groups component
+import MeetingPlanner from './pages/MeetingPlanner';
 import DirectMessages from './pages/DirectMessages';
 import './styles/theme.css';
 import './App.css';
