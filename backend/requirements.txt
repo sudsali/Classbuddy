@@ -12,4 +12,4 @@ redis==5.2.1
 s3transfer==0.11.4
 six==1.17.0
 sqlparse==0.5.3
-urllib3>=1.25.4,<1.27
+urllib3==2.3.0

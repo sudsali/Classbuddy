@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
@@ -50,12 +50,18 @@ const Login = () => {
           </div>
           <button type="submit" className="auth-button">Login</button>
         </form>
+
         <p className="auth-link">
-          Don't have an account? <a href="/register">Register here</a>
+          Don't have an account? <Link to="/register">Register here</Link>
         </p>
+        
+        <p className="auth-link">
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </p>
+
       </div>
     </div>
   );
 };
 
-export default Login; 
+export default Login;

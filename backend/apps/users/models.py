@@ -35,6 +35,7 @@ class User(AbstractUser):
     )
     is_verified = models.BooleanField(default=False)
     verification_code = models.CharField(max_length=6, blank=True, null=True)
+    reset_code = models.CharField(max_length=6, blank=True, null=True)  
 
     # Make email the username field
     USERNAME_FIELD = 'email'

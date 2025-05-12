@@ -74,7 +74,9 @@ INSTALLED_APPS = [
     'apps.study_groups.apps.StudyGroupsConfig',
     'apps.files.apps.FilesConfig',
     'apps.meetings.apps.MeetingsConfig',
-    'apps.notifications.apps.NotificationsConfig'
+    'apps.notifications.apps.NotificationsConfig',
+    'apps.group_tasks.apps.GroupTasksConfig',
+    'apps.direct_messages.apps.DirectMessagesConfig'
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -129,7 +131,7 @@ DATABASES = {
         'NAME': 'classbuddy_db',
         'USER': 'admin',
         'PASSWORD': 'segroup2',
-        'HOST': 'db',  # Using Docker service name
+        'HOST': 'db',  # Changed to use Docker service name
         'PORT': '5432',
     }
 }
@@ -193,12 +195,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-import sys
-if 'test' in sys.argv:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': ':memory:',
-        }
-    }

@@ -23,4 +23,6 @@ urlpatterns = [
     path('api/study-groups/', include('apps.study_groups.urls')),
     path('api/users/', include('apps.users.urls')),
     path('api/meetings/', include('apps.meetings.urls')),
+    path('api/', include('apps.group_tasks.urls')),
+    path('api/direct-messages/', include('apps.direct_messages.urls')),
 ]
