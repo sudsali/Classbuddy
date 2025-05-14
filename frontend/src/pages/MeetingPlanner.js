@@ -30,7 +30,7 @@ const MeetingPlanner = () => {
 
   // Create axios instance with auth header
   const api = axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: process.env.REACT_APP_API_URL,
     headers: {
       'Authorization': `Token ${getAuthToken()}`
     }

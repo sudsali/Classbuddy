@@ -139,7 +139,7 @@ const TaskBoard = ({ groupId }) => {
   const [columns] = useState(['todo', 'in_progress', 'completed']);
 
   const fetchTasks = useCallback(async () => {
-    const res = await axios.get(`http://localhost:8000/api/group_tasks/?group_id=${groupId}`, {
+    const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/group_tasks/?group_id=${groupId}`, {
       headers: {
         Authorization: `Token ${sessionStorage.getItem('token')}`
       }
@@ -211,7 +211,7 @@ const TaskBoard = ({ groupId }) => {
       try {
         for (const update of updates) {
           await axios.patch(
-            `http://localhost:8000/api/group_tasks/${update.id}/`,
+            `${process.env.REACT_APP_API_URL}/api/group_tasks/${update.id}/`,
             { position: update.position },
             {
               headers: {
@@ -293,7 +293,7 @@ const TaskBoard = ({ groupId }) => {
       try {
         // First move the active task to the new column and position
         await axios.post(
-          `http://localhost:8000/api/group_tasks/${activeTaskId}/move/`,
+          `${process.env.REACT_APP_API_URL}/api/group_tasks/${activeTaskId}/move/`,
           {
             status: targetColumnId,
             position: newPosition
@@ -308,7 +308,7 @@ const TaskBoard = ({ groupId }) => {
         // Then update source column positions
         for (const update of sourceUpdates) {
           await axios.patch(
-            `http://localhost:8000/api/group_tasks/${update.id}/`,
+            `${process.env.REACT_APP_API_URL}/api/group_tasks/${update.id}/`,
             { position: update.position },
             {
               headers: {
@@ -322,7 +322,7 @@ const TaskBoard = ({ groupId }) => {
         for (const update of targetUpdates) {
           if (update.id !== activeTaskId) {
             await axios.patch(
-              `http://localhost:8000/api/group_tasks/${update.id}/`,
+              `${process.env.REACT_APP_API_URL}/api/group_tasks/${update.id}/`,
               { position: update.position },
               {
                 headers: {
@@ -346,7 +346,7 @@ const TaskBoard = ({ groupId }) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
   
     try {
-      await axios.delete(`http://localhost:8000/api/group_tasks/${taskId}/`, {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/group_tasks/${taskId}/`, {
         headers: {
           Authorization: `Token ${sessionStorage.getItem('token')}`
         }
@@ -359,7 +359,7 @@ const TaskBoard = ({ groupId }) => {
   
   const handleEdit = async (taskId, newData) => {
     try {
-      await axios.patch(`http://localhost:8000/api/group_tasks/${taskId}/`, newData, {
+      await axios.patch(`${process.env.REACT_APP_API_URL}/api/group_tasks/${taskId}/`, newData, {
         headers: {
           Authorization: `Token ${sessionStorage.getItem('token')}`
         }
@@ -400,7 +400,7 @@ const TaskBoard = ({ groupId }) => {
           try {
             // Create new task at position 0
             await axios.post(
-              'http://localhost:8000/api/group_tasks/',
+              `${process.env.REACT_APP_API_URL}/api/group_tasks/`,
               {
                 ...newTask,
                 group: groupId,
