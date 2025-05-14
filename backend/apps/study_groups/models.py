@@ -1,9 +1,32 @@
 from django.db import models
 from django.utils.timezone import now
-from django.core.validators import MinLengthValidator, MaxLengthValidator
+from django.core.validators import MinLengthValidator, MaxLengthValidator, MinValueValidator, MaxValueValidator
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+class FileAttachment(models.Model):
+    file = models.FileField(upload_to='chat_files/')
+    original_filename = models.CharField(max_length=255)
+    file_size = models.IntegerField()  # Size in bytes
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_files')
+    
+    def __str__(self):
+        return self.original_filename
+
+class ChatMessage(models.Model):
+    study_group = models.ForeignKey('StudyGroup', on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    attachments = models.ManyToManyField(FileAttachment, blank=True, related_name='messages')
+    
+    class Meta:
+        ordering = ['timestamp']
+        
+    def __str__(self):
+        return f"{self.sender.get_full_name()} - {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
 
 class StudyGroup(models.Model):
     name = models.CharField(
@@ -18,7 +41,14 @@ class StudyGroup(models.Model):
         help_text="Detailed description of group purpose"
     )
     subject = models.CharField(max_length=100)
-    max_members = models.IntegerField(default=5)
+    max_members = models.IntegerField(
+        default=5,
+        validators=[
+            MinValueValidator(2, message="Maximum members must be at least 2"),
+            MaxValueValidator(10, message="Maximum members cannot exceed 10")
+        ],
+        help_text="Number of maximum members (2-10)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups')
     members = models.ManyToManyField(User, related_name='joined_groups')

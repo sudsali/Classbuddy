@@ -7,22 +7,27 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Set up axios defaults
   useEffect(() => {
-    // Check if user is already logged in
     const token = sessionStorage.getItem('token');
     if (token) {
-      // Verify token and get user info
-      axios.get('http://127.0.0.1:8000/api/auth/user/', {
-        headers: { Authorization: `Token ${token}` }
-      })
-      .then(response => {
-        setUser(response.data);
-        setLoading(false);
-      })
-      .catch(() => {
-        sessionStorage.removeItem('token');
-        setLoading(false);
-      });
+      axios.defaults.headers.common['Authorization'] = `Token ${token}`;
+    }
+  }, []);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      axios.get('/api/users/profile/')
+        .then(response => {
+          setUser(response.data);
+          setLoading(false);
+        })
+        .catch(() => {
+          sessionStorage.removeItem('token');
+          delete axios.defaults.headers.common['Authorization'];
+          setLoading(false);
+        });
     } else {
       setLoading(false);
     }
@@ -30,25 +35,25 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/auth/login/', {
+      const response = await axios.post('/api/users/login/', {
         email,
         password
       });
       const { token, user } = response.data;
       sessionStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Token ${token}`;
       setUser(user);
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.response?.data?.message || 'Login failed' };
+      return { success: false, error: error.response?.data?.error || 'Login failed' };
     }
   };
 
   const register = async (userData) => {
     try {
-      await axios.post('http://127.0.0.1:8000/api/auth/register/', userData);
+      await axios.post('/api/users/register/', userData);
       return { success: true };
     } catch (error) {
-      // Format error messages from the backend
       const errorData = error.response?.data;
       let errorMessage = 'Registration failed';
       
@@ -70,13 +75,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (userData) => {
+    setUser(userData);
+  };
+
   const logout = () => {
     sessionStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -88,4 +98,4 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};

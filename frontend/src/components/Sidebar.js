@@ -42,6 +42,16 @@ const Sidebar = () => {
         </div>
       </div>
       
+      <div className="user-profile">
+        <Link to="/profile" className="profile-link">
+          <FaUser className="profile-icon" />
+          <div className="user-info">
+            <span className="user-name">{user?.first_name} {user?.last_name}</span>
+            <span className="user-email">{user?.email}</span>
+          </div>
+        </Link>
+      </div>
+
       <nav className="sidebar-nav">
         {menuItems.map((item, index) => (
           <Link 
@@ -55,15 +65,7 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="user-section">
-        <div className="user-profile">
-          <FaUser className="user-icon" />
-          {user && (
-            <span className="user-name">
-              {user.first_name} {user.last_name}
-            </span>
-          )}
-        </div>
+      <div className="logout-container">
         <button onClick={handleLogout} className="logout-button">
           <FaSignOutAlt className="logout-icon" />
           <span>Logout</span>
