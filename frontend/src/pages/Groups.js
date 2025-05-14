@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './Groups.css';
@@ -41,34 +41,7 @@ const Groups = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchFormVisible, setIsSearchFormVisible] = useState(false);
 
-  useEffect(() => {
-    fetchGroups();
-  }, []);
-
-  useEffect(() => {
-    if (showChatModal && selectedGroup) {
-      fetchMessages(selectedGroup.id);
-      
-      const interval = setInterval(() => {
-        fetchMessages(selectedGroup.id);
-      }, 3000);
-      
-      setMessagePollingInterval(interval);
-      
-      return () => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      };
-    } else {
-      if (messagePollingInterval) {
-        clearInterval(messagePollingInterval);
-        setMessagePollingInterval(null);
-      }
-    }
-  }, [showChatModal, selectedGroup]);
-
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -82,7 +55,42 @@ const Groups = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const fetchMessages = useCallback(async (groupId) => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/study-groups/${groupId}/messages/`, {
+        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
+
+  useEffect(() => {
+    if (showChatModal && selectedGroup) {
+      fetchMessages(selectedGroup.id);
+      const interval = setInterval(() => {
+        fetchMessages(selectedGroup.id);
+      }, 3000);
+      setMessagePollingInterval(interval);
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    } else {
+      if (messagePollingInterval) {
+        clearInterval(messagePollingInterval);
+        setMessagePollingInterval(null);
+      }
+    }
+  }, [showChatModal, selectedGroup, fetchMessages]);
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
@@ -146,17 +154,6 @@ const Groups = () => {
   const handleGroupClick = (group) => {
     setSelectedGroup(group);
     setShowMembersModal(true);
-  };
-
-  const fetchMessages = async (groupId) => {
-    try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/study-groups/${groupId}/messages/`, {
-        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
-      });
-      setMessages(response.data);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
   };
 
   const sendMessage = async (e) => {

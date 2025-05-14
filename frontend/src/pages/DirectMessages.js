@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -19,20 +19,7 @@ const DirectMessages = () => {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState(null);
 
-  useEffect(() => {
-    fetchChats();
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    if (selectedChat) {
-      fetchMessages(selectedChat.id);
-      const interval = setInterval(() => fetchMessages(selectedChat.id), 3000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedChat]);
-
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
     try {
       setError('');
       const response = await axios.get('/api/direct-messages/chats/');
@@ -41,18 +28,18 @@ const DirectMessages = () => {
       console.error('Error fetching chats:', error);
       setError('Error fetching chats. Please try again later.');
     }
-  };
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await axios.get('/api/users/');
       setUsers(response.data.filter(u => u.id !== user.id));
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  };
+  }, [user.id]);
 
-  const fetchMessages = async (chatId) => {
+  const fetchMessages = useCallback(async (chatId) => {
     try {
       const response = await axios.get(`/api/direct-messages/chats/${chatId}/messages/`);
       setMessages(response.data);
@@ -60,7 +47,20 @@ const DirectMessages = () => {
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchChats();
+    fetchUsers();
+  }, [fetchChats, fetchUsers]);
+
+  useEffect(() => {
+    if (selectedChat) {
+      fetchMessages(selectedChat.id);
+      const interval = setInterval(() => fetchMessages(selectedChat.id), 3000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedChat, fetchMessages]);
 
   const handleChatSelect = (chat) => {
     setSelectedChat(chat);

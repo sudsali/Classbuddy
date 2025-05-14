@@ -15,7 +15,7 @@ import './App.css';
 import ForgotPassword from './pages/ForgetPassword';
 
 // Import your other page components here
-const Meetings = () => <div>Meeting Planner</div>;
+//const Meetings = () => <div>Meeting Planner</div>;
 const Notifications = () => <div>Notifications</div>;
 const Bookmarks = () => <div>Bookmarks</div>;
 const Tasks = () => <div>Task Tracker</div>;

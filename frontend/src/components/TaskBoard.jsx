@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import {
   DndContext,
@@ -138,18 +138,18 @@ const TaskBoard = ({ groupId }) => {
   const [activeTask, setActiveTask] = useState(null);
   const [columns] = useState(['todo', 'in_progress', 'completed']);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     const res = await axios.get(`http://localhost:8000/api/group_tasks/?group_id=${groupId}`, {
       headers: {
         Authorization: `Token ${sessionStorage.getItem('token')}`
       }
     });
     setTasks(res.data);
-  };
+  }, [groupId]);
 
   useEffect(() => {
     fetchTasks();
-  }, [groupId]);
+  }, [fetchTasks]);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
