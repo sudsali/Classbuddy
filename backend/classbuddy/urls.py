@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
+from apps.meetings import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,4 +26,6 @@ urlpatterns = [
     path('api/meetings/', include('apps.meetings.urls')),
     path('api/', include('apps.group_tasks.urls')),
     path('api/direct-messages/', include('apps.direct_messages.urls')),
+    path('meetings/<int:meeting_id>/availability/', views.MeetingAvailabilityView.as_view()),
+    path('study-groups/<int:group_id>/members/', views.StudyGroupMembersView.as_view()),
 ]
