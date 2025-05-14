@@ -77,7 +77,7 @@ const MeetingPlanner = () => {
       console.log('Submitting meeting data:', formData); // Debug log
 
       // First, get the study group details
-      const groupResponse = await api.get(`/study-groups/${formData.study_group}/`);
+      const groupResponse = await api.get(`/api/study-groups/${formData.study_group}/`);
       const studyGroup = groupResponse.data;
 
       // Create the meeting with properly formatted data
