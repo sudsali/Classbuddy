@@ -37,7 +37,7 @@ const MeetingPlanner = () => {
 
   const fetchMeetings = useCallback(async () => {
     try {
-      const response = await api.get('/meetings/');
+      const response = await api.get('/api/meetings/');
       setMeetings(response.data);
     } catch (error) {
       console.error('Error fetching meetings:', error);
@@ -49,7 +49,7 @@ const MeetingPlanner = () => {
 
   const fetchStudyGroups = useCallback(async () => {
     try {
-      const response = await api.get('/study-groups/');
+      const response = await api.get('/api/study-groups/');
       setStudyGroups(response.data);
     } catch (error) {
       console.error('Error fetching study groups:', error);
