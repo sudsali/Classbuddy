@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = sessionStorage.getItem('token');
     if (token) {
-      axios.get('/api/users/profile/')
+      axios.get(`${process.env.REACT_APP_API_URL}/api/users/profile/`)
         .then(response => {
           setUser(response.data);
           setLoading(false);
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/api/users/login/', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/users/login/`, {
         email,
         password
       });
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      await axios.post('/api/users/register/', userData);
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/users/register/`, userData);
       return { success: true };
     } catch (error) {
       const errorData = error.response?.data;

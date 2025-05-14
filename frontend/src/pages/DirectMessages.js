@@ -21,7 +21,7 @@ const DirectMessages = () => {
   const fetchChats = useCallback(async () => {
     try {
       setError('');
-      const response = await axios.get('/api/direct-messages/chats/');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/`);
       setChats(response.data);
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -31,7 +31,7 @@ const DirectMessages = () => {
 
   const fetchMessages = useCallback(async (chatId) => {
     try {
-      const response = await axios.get(`/api/direct-messages/chats/${chatId}/messages/`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/${chatId}/messages/`);
       setMessages(response.data);
       scrollToBottom();
     } catch (error) {
@@ -67,7 +67,7 @@ const DirectMessages = () => {
     }
 
     try {
-      const response = await axios.post('/api/direct-messages/chats/get_or_create_chat/', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/get_or_create_chat/`, {
         email: email.trim()
       });
       
@@ -111,10 +111,10 @@ const DirectMessages = () => {
         receiver: selectedChat.participants.find(p => p.id !== user.id).id
       };
 
-      const response = await axios.post('/api/direct-messages/messages/', messageData);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/direct-messages/messages/`, messageData);
       
       if (!chats.some(chat => chat.id === selectedChat.id)) {
-        const chatResponse = await axios.get(`/api/direct-messages/chats/${selectedChat.id}/`);
+        const chatResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/${selectedChat.id}/`);
         setChats(prevChats => [...prevChats, chatResponse.data]);
       } else {
         setChats(prevChats => 
@@ -140,7 +140,7 @@ const DirectMessages = () => {
 
   const handleDeleteChat = async (chat) => {
     try {
-      await axios.delete(`/api/direct-messages/chats/${chat.id}/`);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/${chat.id}/`);
       setChats(chats.filter(c => c.id !== chat.id));
       if (selectedChat?.id === chat.id) {
         setSelectedChat(null);

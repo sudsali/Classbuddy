@@ -43,7 +43,7 @@ const Groups = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('http://127.0.0.1:8000/api/study-groups/', {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/study-groups/`, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       setGroups(response.data);
@@ -57,7 +57,7 @@ const Groups = () => {
 
   const fetchMessages = useCallback(async (groupId) => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/study-groups/${groupId}/messages/`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/study-groups/${groupId}/messages/`, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       setMessages(response.data);
@@ -95,7 +95,7 @@ const Groups = () => {
   const handleCreateGroup = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://127.0.0.1:8000/api/study-groups/', newGroup, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/`, newGroup, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       setShowCreateModal(false);
@@ -109,7 +109,7 @@ const Groups = () => {
 
   const handleJoinGroup = async (groupId) => {
     try {
-      await axios.post(`http://127.0.0.1:8000/api/study-groups/${groupId}/join/`, {}, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/${groupId}/join/`, {}, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       fetchGroups();
@@ -121,7 +121,7 @@ const Groups = () => {
 
   const handleLeaveGroup = async (groupId) => {
     try {
-      await axios.post(`http://127.0.0.1:8000/api/study-groups/${groupId}/leave/`, {}, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/${groupId}/leave/`, {}, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       fetchGroups();
@@ -137,7 +137,7 @@ const Groups = () => {
 
   const handleDismissGroup = async (groupId) => {
     try {
-      await axios.post(`http://127.0.0.1:8000/api/study-groups/${groupId}/dismiss/`, {}, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/${groupId}/dismiss/`, {}, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       fetchGroups();
@@ -161,7 +161,7 @@ const Groups = () => {
     if (!newMessage.trim()) return;
 
     try {
-      await axios.post(`http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/create_message/`, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/${selectedGroup.id}/create_message/`, {
         content: newMessage.trim()
       }, {
         headers: {
@@ -198,7 +198,7 @@ const Groups = () => {
     e.preventDefault();
     try {
       await axios.patch(
-        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/${selectedGroup.id}/`,
         editGroupData,
         {
           headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
@@ -241,7 +241,7 @@ const Groups = () => {
       
       // First create a message with the file name using the create_message action
       const messageResponse = await axios.post(
-        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/create_message/`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/${selectedGroup.id}/create_message/`,
         { content: `Uploaded file: ${selectedFile.name}` },
         {
           headers: {
@@ -263,7 +263,7 @@ const Groups = () => {
       console.log('File to upload:', selectedFile);
 
       // Upload the file using the correct URL structure
-      const uploadUrl = `http://127.0.0.1:8000/api/study-groups/messages/${messageId}/upload_file/`;
+      const uploadUrl = `${process.env.REACT_APP_API_URL}/api/study-groups/messages/${messageId}/upload_file/`;
       console.log('Upload URL:', uploadUrl);
       
       const uploadResponse = await axios.post(
@@ -309,7 +309,7 @@ const Groups = () => {
       
       // First, get the file details to get the original filename
       const fileDetailsResponse = await axios.get(
-        `http://127.0.0.1:8000/api/study-groups/messages/download_file/?file_id=${fileId}`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/messages/download_file/?file_id=${fileId}`,
         {
           headers: { Authorization: `Token ${sessionStorage.getItem('token')}` },
           responseType: 'blob'
@@ -377,7 +377,7 @@ const Groups = () => {
 
     try {
       await axios.delete(
-        `http://127.0.0.1:8000/api/study-groups/messages/${messageId}/delete_file/?file_id=${fileId}`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/messages/${messageId}/delete_file/?file_id=${fileId}`,
         {
           headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
         }
@@ -398,7 +398,7 @@ const Groups = () => {
     try {
       console.log('Searching messages in group:', selectedGroup.id);
       const response = await axios.get(
-        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/search_messages/?q=${encodeURIComponent(searchQuery)}`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/${selectedGroup.id}/search_messages/?q=${encodeURIComponent(searchQuery)}`,
         {
           headers: { 
             Authorization: `Token ${sessionStorage.getItem('token')}` 

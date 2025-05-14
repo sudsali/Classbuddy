@@ -46,7 +46,7 @@ const ForgotPassword = () => {
   const handleSendCode = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:8000/api/users/send-reset-code/', { email });
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/users/send-reset-code/`, { email });
       setStep(2);
       setMessage('');  // Clear any existing message
       setError('');
@@ -72,7 +72,7 @@ const ForgotPassword = () => {
     }
 
     try {
-      await axios.post('http://localhost:8000/api/users/reset-password/', {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/users/reset-password/`, {
         email,
         code,
         new_password: newPassword

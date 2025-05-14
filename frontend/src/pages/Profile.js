@@ -36,7 +36,7 @@ const Profile = () => {
 
     try {
       const response = await axios.patch(
-        'http://127.0.0.1:8000/api/users/profile/',
+        `${process.env.REACT_APP_API_URL}/api/users/profile/`,
         {
           first_name: formData.firstName,
           last_name: formData.lastName
