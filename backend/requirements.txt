@@ -18,8 +18,3 @@ dj-database-url
 whitenoise==6.6.0
 python-dotenv==1.0.1
 python-decouple
-psycopg2-binary
-django-cors-headers
-django-rest-framework
-whitenoise
-gunicorn
