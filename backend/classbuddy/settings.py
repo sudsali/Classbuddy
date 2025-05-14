@@ -206,3 +206,6 @@ X_FRAME_OPTIONS = 'DENY'
 CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',')
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+MEDIA_ROOT = '/app/backend/chat_files'
+MEDIA_URL = '/media/'
