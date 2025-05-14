@@ -16,8 +16,6 @@ const Groups = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTasksModal, setShowTasksModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedTitle, setEditedTitle] = useState('');
   const [newGroup, setNewGroup] = useState({
     name: '',
     description: '',
@@ -73,9 +71,10 @@ const Groups = () => {
   }, [fetchGroups]);
 
   useEffect(() => {
+    let interval;
     if (showChatModal && selectedGroup) {
       fetchMessages(selectedGroup.id);
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         fetchMessages(selectedGroup.id);
       }, 3000);
       setMessagePollingInterval(interval);
@@ -90,6 +89,7 @@ const Groups = () => {
         setMessagePollingInterval(null);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showChatModal, selectedGroup, fetchMessages]);
 
   const handleCreateGroup = async (e) => {
@@ -182,12 +182,6 @@ const Groups = () => {
     }
   };
 
-  const handleEnterChat = (group) => {
-    setSelectedGroup(group);
-    setShowMembersModal(false);
-    setShowChatModal(true);
-  };
-
   const handleCloseChatModal = () => {
     setShowChatModal(false);
     setMessages([]);
@@ -197,28 +191,6 @@ const Groups = () => {
     if (messagePollingInterval) {
       clearInterval(messagePollingInterval);
       setMessagePollingInterval(null);
-    }
-  };
-
-  const handleUpdateGroupTitle = async () => {
-    try {
-      await axios.patch(
-        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/`,
-        { name: editedTitle },
-        {
-          headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
-        }
-      );
-      setSelectedGroup({ ...selectedGroup, name: editedTitle });
-      setIsEditingTitle(false);
-      fetchGroups(); // Refresh the groups list
-    } catch (error) {
-      console.error('Error updating group title:', error);
-      if (error.response?.data?.detail) {
-        alert(error.response.data.detail);
-      } else {
-        alert('Failed to update group title. Please try again.');
-      }
     }
   };
 

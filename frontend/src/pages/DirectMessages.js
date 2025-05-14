@@ -14,7 +14,6 @@ const DirectMessages = () => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [error, setError] = useState('');
-  const [users, setUsers] = useState([]);
   const messagesEndRef = useRef(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState(null);
@@ -30,15 +29,6 @@ const DirectMessages = () => {
     }
   }, []);
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      const response = await axios.get('/api/users/');
-      setUsers(response.data.filter(u => u.id !== user.id));
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  }, [user.id]);
-
   const fetchMessages = useCallback(async (chatId) => {
     try {
       const response = await axios.get(`/api/direct-messages/chats/${chatId}/messages/`);
@@ -51,8 +41,7 @@ const DirectMessages = () => {
 
   useEffect(() => {
     fetchChats();
-    fetchUsers();
-  }, [fetchChats, fetchUsers]);
+  }, [fetchChats]);
 
   useEffect(() => {
     if (selectedChat) {

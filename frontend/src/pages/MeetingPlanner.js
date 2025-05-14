@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import axios from 'axios';
@@ -36,14 +36,7 @@ const MeetingPlanner = () => {
     }
   });
 
-  // Fetch meetings and study groups when component mounts
-  useEffect(() => {
-    fetchMeetings();
-    fetchStudyGroups();
-  }, []);
-
-  // Fetch all meetings
-  const fetchMeetings = async () => {
+  const fetchMeetings = useCallback(async () => {
     try {
       const response = await api.get('/meetings/');
       setMeetings(response.data);
@@ -53,17 +46,21 @@ const MeetingPlanner = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api]);
 
-  // Fetch study groups for the dropdown
-  const fetchStudyGroups = async () => {
+  const fetchStudyGroups = useCallback(async () => {
     try {
       const response = await api.get('/study-groups/');
       setStudyGroups(response.data);
     } catch (error) {
       console.error('Error fetching study groups:', error);
     }
-  };
+  }, [api]);
+
+  useEffect(() => {
+    fetchMeetings();
+    fetchStudyGroups();
+  }, [fetchMeetings, fetchStudyGroups]);
 
   // Handle input changes for the meeting creation form
   const handleInputChange = (e) => {
@@ -252,22 +249,10 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [tempEvent, setTempEvent] = useState(null);
 
-  useEffect(() => {
-    fetchAvailability();
-    fetchGroupMembers();
-  }, [meetingId, groupId]);
-
-  // Calculate overlapping time slots when events change
-  useEffect(() => {
-    calculateOverlaps();
-  }, [events]);
-
-  const fetchAvailability = async () => {
+  const fetchAvailability = useCallback(async () => {
     try {
       const response = await api.get(`/meetings/${meetingId}/availability/`);
       const availabilityData = response.data;
-      
-      // Transform availability data into calendar events
       const calendarEvents = availabilityData.map(slot => ({
         id: slot.id,
         title: `${slot.user.first_name} ${slot.user.last_name}`,
@@ -275,14 +260,13 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
         end: new Date(slot.end_time),
         user: slot.user,
       }));
-      
       setEvents(calendarEvents);
     } catch (error) {
       console.error('Error fetching availability:', error);
     }
-  };
+  }, [api, meetingId]);
 
-  const fetchGroupMembers = async () => {
+  const fetchGroupMembers = useCallback(async () => {
     try {
       const response = await api.get(`/study-groups/${groupId}/members/`);
       setMembers(response.data);
@@ -291,9 +275,9 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [api, groupId]);
 
-  const calculateOverlaps = () => {
+  const calculateOverlaps = useCallback(() => {
     if (events.length === 0) return;
 
     // Group events by their time slots
@@ -332,7 +316,16 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       .sort((a, b) => b.count - a.count); // Sort by most overlap first
     
     setOverlaps(overlapArray);
-  };
+  }, [events]);
+
+  useEffect(() => {
+    fetchAvailability();
+    fetchGroupMembers();
+  }, [meetingId, groupId, fetchAvailability, fetchGroupMembers]);
+
+  useEffect(() => {
+    calculateOverlaps();
+  }, [events, calculateOverlaps]);
 
   const handleSelect = async ({ start, end }) => {
     try {

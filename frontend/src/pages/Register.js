@@ -16,7 +16,6 @@ const Register = () => {
   const [showVerification, setShowVerification] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [step, setStep] = useState('register');
   const { register } = useAuth();
   const navigate = useNavigate();
   const inputRefs = useRef([]);
