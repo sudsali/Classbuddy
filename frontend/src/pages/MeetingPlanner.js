@@ -89,7 +89,7 @@ const MeetingPlanner = () => {
 
       console.log('Sending meeting data to API:', meetingData); // Debug log
 
-      const response = await api.post('/meetings/', meetingData);
+      const response = await api.post('/api/meetings/', meetingData);
       console.log('Meeting creation response:', response.data); // Debug log
 
       // Add the study group details to the meeting data
