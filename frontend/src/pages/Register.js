@@ -70,7 +70,7 @@ const Register = () => {
   const handleVerify = async () => {
     try {
       const code = verificationCode.join('');
-      const response = await fetch("http://localhost:8000/api/users/verify/", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/users/verify/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
