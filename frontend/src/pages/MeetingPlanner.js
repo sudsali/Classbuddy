@@ -251,7 +251,8 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   const fetchAvailability = useCallback(async () => {
     try {
       const response = await api.get(`/meetings/${meetingId}/availability/`);
-      const availabilityData = response.data;
+      // Ensure response.data is an array before mapping
+      const availabilityData = Array.isArray(response.data) ? response.data : [];
       const calendarEvents = availabilityData.map(slot => ({
         id: slot.id,
         title: `${slot.user.first_name} ${slot.user.last_name}`,
@@ -262,27 +263,35 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       setEvents(calendarEvents);
     } catch (error) {
       console.error('Error fetching availability:', error);
+      setEvents([]); // Set empty array on error
     }
   }, [api, meetingId]);
 
   const fetchGroupMembers = useCallback(async () => {
     try {
       const response = await api.get(`/study-groups/${groupId}/members/`);
-      setMembers(response.data);
+      // Ensure response.data is an array before setting
+      setMembers(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching group members:', error);
+      setMembers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
   }, [api, groupId]);
 
   const calculateOverlaps = useCallback(() => {
-    if (events.length === 0) return;
+    if (!Array.isArray(events) || events.length === 0) {
+      setOverlaps([]);
+      return;
+    }
 
     // Group events by their time slots
     const timeSlotMap = {};
     
     events.forEach(event => {
+      if (!event.start || !event.end) return; // Skip invalid events
+      
       const startTime = event.start.getTime();
       const endTime = event.end.getTime();
       const key = `${startTime}-${endTime}`;
