@@ -324,6 +324,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
           setEvents(calendarEvents);
           setMembers(groupMembers);
           setLoading(false);
+          setError(null); // Clear any previous errors
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -337,6 +338,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
           setEvents([]);
           setMembers([]);
           setLoading(false);
+          setError(error.response?.data?.error || error.message || 'Failed to load calendar data');
         }
       }
     };
