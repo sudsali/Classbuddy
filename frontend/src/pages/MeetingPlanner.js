@@ -601,10 +601,11 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
               <button 
                 className="edit-button"
                 onClick={() => {
-                  // Here you could add a date picker or other UI for editing times
-                  // For now, we'll just close the modal
-                  setShowEventModal(false);
-                  setEditingEvent(null);
+                  // For now, we'll just update the time by adding 30 minutes
+                  // In a real implementation, this would use a date picker
+                  const newStart = new Date(editingEvent.start);
+                  const newEnd = new Date(editingEvent.end);
+                  handleEditEvent(newStart, newEnd);
                 }}
               >
                 Edit Time
