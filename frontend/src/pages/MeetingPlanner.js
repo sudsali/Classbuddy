@@ -247,6 +247,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   const [overlaps, setOverlaps] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [tempEvent, setTempEvent] = useState(null);
+  const [error, setError] = useState(null);
 
   // Clear all states when meetingId changes
   useEffect(() => {
@@ -289,6 +290,8 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       if (!isMounted) return;
 
       try {
+        console.log('Fetching data for meeting:', meetingId, 'and group:', groupId);
+        
         // Fetch both data in parallel
         const [availabilityResponse, groupResponse] = await Promise.all([
           api.get(`/api/meetings/${meetingId}/availability/`),
@@ -296,6 +299,9 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
         ]);
 
         if (!isMounted) return;
+
+        console.log('Availability response:', availabilityResponse.data);
+        console.log('Group response:', groupResponse.data);
 
         // Process availability data
         const availabilityData = Array.isArray(availabilityResponse.data) ? availabilityResponse.data : [];
@@ -310,17 +316,26 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
         // Process group members data
         const groupMembers = groupResponse.data?.members || [];
 
+        console.log('Processed calendar events:', calendarEvents);
+        console.log('Processed group members:', groupMembers);
+
         // Update states in a single batch
-        setEvents(calendarEvents);
-        setMembers(groupMembers);
+        if (isMounted) {
+          setEvents(calendarEvents);
+          setMembers(groupMembers);
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
+        console.error('Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status
+        });
+        
         if (isMounted) {
           setEvents([]);
           setMembers([]);
-        }
-      } finally {
-        if (isMounted) {
           setLoading(false);
         }
       }
@@ -511,7 +526,11 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   };
 
   if (loading) {
-    return <div>Loading calendar...</div>;
+    return <div className="loading-container">Loading calendar data...</div>;
+  }
+
+  if (error) {
+    return <div className="error-container">Error loading calendar: {error}</div>;
   }
 
   // Combine regular events, overlaps, and temporary event for display
