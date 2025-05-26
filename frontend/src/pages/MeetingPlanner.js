@@ -250,11 +250,16 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
   // Clear all states when meetingId changes
   useEffect(() => {
-    setEvents([]);
-    setMembers([]);
-    setOverlaps([]);
-    setSelectedSlot(null);
-    setTempEvent(null);
+    const clearStates = () => {
+      setEvents([]);
+      setMembers([]);
+      setOverlaps([]);
+      setSelectedSlot(null);
+      setTempEvent(null);
+      setLoading(true);
+    };
+
+    clearStates();
   }, [meetingId]);
 
   const fetchAvailability = useCallback(async () => {
@@ -291,27 +296,58 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     }
   }, [api, groupId]);
 
-  // Combined data fetching effect with better error handling
+  // Single effect to handle all data fetching
   useEffect(() => {
+    let isMounted = true;
+
     const fetchData = async () => {
-      setLoading(true);
+      if (!isMounted) return;
+
       try {
-        // Fetch availability first
-        await fetchAvailability();
-        // Then fetch group members
-        await fetchGroupMembers();
+        // Fetch both data in parallel
+        const [availabilityResponse, groupResponse] = await Promise.all([
+          api.get(`/api/meetings/${meetingId}/availability/`),
+          api.get(`/api/study-groups/${groupId}/`)
+        ]);
+
+        if (!isMounted) return;
+
+        // Process availability data
+        const availabilityData = Array.isArray(availabilityResponse.data) ? availabilityResponse.data : [];
+        const calendarEvents = availabilityData.map(slot => ({
+          id: slot.id,
+          title: `${slot.user.first_name} ${slot.user.last_name}`,
+          start: new Date(slot.start_time),
+          end: new Date(slot.end_time),
+          user: slot.user,
+        }));
+
+        // Process group members data
+        const groupMembers = groupResponse.data?.members || [];
+
+        // Update states in a single batch
+        setEvents(calendarEvents);
+        setMembers(groupMembers);
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Set empty arrays on error
-        setEvents([]);
-        setMembers([]);
+        if (isMounted) {
+          setEvents([]);
+          setMembers([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
-  }, [meetingId, groupId, fetchAvailability, fetchGroupMembers]);
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
+  }, [meetingId, groupId, api]);
 
   const calculateOverlaps = useCallback(() => {
     if (!Array.isArray(events) || events.length === 0) {
