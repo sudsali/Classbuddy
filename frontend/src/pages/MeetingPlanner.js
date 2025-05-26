@@ -255,12 +255,10 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     setOverlaps([]);
     setSelectedSlot(null);
     setTempEvent(null);
-    setLoading(true);
   }, [meetingId]);
 
   const fetchAvailability = useCallback(async () => {
     try {
-      setLoading(true);
       const response = await api.get(`/api/meetings/${meetingId}/availability/`);
       // Ensure response.data is an array before mapping
       const availabilityData = Array.isArray(response.data) ? response.data : [];
@@ -275,24 +273,38 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     } catch (error) {
       console.error('Error fetching availability:', error);
       setEvents([]); // Set empty array on error
-    } finally {
-      setLoading(false);
     }
   }, [api, meetingId]);
 
   const fetchGroupMembers = useCallback(async () => {
     try {
-      setLoading(true);
       const response = await api.get(`/api/study-groups/${groupId}/members/`);
       // Ensure response.data is an array before setting
       setMembers(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching group members:', error);
       setMembers([]); // Set empty array on error
-    } finally {
-      setLoading(false);
     }
   }, [api, groupId]);
+
+  // Combined data fetching effect
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchAvailability(),
+          fetchGroupMembers()
+        ]);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [meetingId, groupId, fetchAvailability, fetchGroupMembers]);
 
   const calculateOverlaps = useCallback(() => {
     if (!Array.isArray(events) || events.length === 0) {
@@ -339,11 +351,6 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     
     setOverlaps(overlapArray);
   }, [events]);
-
-  useEffect(() => {
-    fetchAvailability();
-    fetchGroupMembers();
-  }, [meetingId, groupId, fetchAvailability, fetchGroupMembers]);
 
   useEffect(() => {
     calculateOverlaps();
