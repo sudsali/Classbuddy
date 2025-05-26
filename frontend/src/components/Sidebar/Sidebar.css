@@ -1,0 +1,42 @@
+/* src/components/Sidebar/Sidebar.css */
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  background-color: #f4f4f4;
+  padding: 30px 20px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+.sidebar-title {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.sidebar-list {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar-item {
+  margin: 1rem 0;
+}
+
+.sidebar-link {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.sidebar-link:hover {
+  color: #007bff;
+}
+
+.sidebar-link.active {
+  font-weight: bold;
+  color: #007bff;
+}

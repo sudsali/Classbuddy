@@ -1,0 +1,47 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: classbuddy_backend
+    restart: always
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: "postgres://admin:segroup2@db:5432/classbuddy_db"
+      REDIS_URL: "redis://classbuddy_redis:6379/1"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: classbuddy_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+
+  db:
+    image: postgres:15
+    container_name: classbuddy_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: classbuddy_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: segroup2
+    ports:
+      - "5432:5432"
+    
+  redis:
+    image: redis:latest
+    container_name: classbuddy_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
