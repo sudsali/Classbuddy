@@ -281,21 +281,6 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     }
   }, [api, meetingId]);
 
-  const fetchGroupMembers = useCallback(async () => {
-    try {
-      // First get the study group details to get the members
-      const response = await api.get(`/api/study-groups/${groupId}/`);
-      if (response.data && response.data.members) {
-        setMembers(response.data.members);
-      } else {
-        setMembers([]);
-      }
-    } catch (error) {
-      console.error('Error fetching group members:', error);
-      setMembers([]); // Set empty array on error
-    }
-  }, [api, groupId]);
-
   // Single effect to handle all data fetching
   useEffect(() => {
     let isMounted = true;
