@@ -254,21 +254,12 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
   // Get current user ID from token
   const getCurrentUserId = useCallback(() => {
-    const token = sessionStorage.getItem('token');
-    if (!token) return null;
-    
     try {
-      // Decode the JWT token to get user info
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-
-      const userData = JSON.parse(jsonPayload);
-      return userData.user_id;
+      // Get user data from sessionStorage
+      const userData = JSON.parse(sessionStorage.getItem('user'));
+      return userData?.id || null;
     } catch (error) {
-      console.error('Error decoding token:', error);
+      console.error('Error getting user data:', error);
       return null;
     }
   }, []);
