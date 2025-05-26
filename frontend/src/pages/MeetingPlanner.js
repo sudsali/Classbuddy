@@ -251,6 +251,20 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   const [tempEvent, setTempEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  // Fetch current user data
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await api.get('/api/users/me/');
+        setCurrentUserId(response.data.id);
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+      }
+    };
+    fetchCurrentUser();
+  }, [api]);
 
   // Fetch calendar data
   useEffect(() => {
@@ -533,6 +547,10 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     }
   };
 
+  const isUserEvent = useCallback((event) => {
+    return event.user && event.user.id === currentUserId;
+  }, [currentUserId]);
+
   if (calendarData.loading) {
     return (
       <div className="loading-container">
@@ -592,30 +610,33 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       {showEventModal && editingEvent && !editingEvent.isTemp && !editingEvent.isOverlap && (
         <div className="event-modal">
           <div className="event-modal-content">
-            <h3>Edit Availability</h3>
+            <h3>Availability Details</h3>
             <div className="event-details">
               <p><strong>Start:</strong> {moment(editingEvent.start).format('MMMM D, YYYY h:mm A')}</p>
               <p><strong>End:</strong> {moment(editingEvent.end).format('MMMM D, YYYY h:mm A')}</p>
+              <p><strong>User:</strong> {editingEvent.user.first_name} {editingEvent.user.last_name}</p>
             </div>
             <div className="event-actions">
-              <button 
-                className="edit-button"
-                onClick={() => {
-                  // For now, we'll just update the time by adding 30 minutes
-                  // In a real implementation, this would use a date picker
-                  const newStart = new Date(editingEvent.start);
-                  const newEnd = new Date(editingEvent.end);
-                  handleEditEvent(newStart, newEnd);
-                }}
-              >
-                Edit Time
-              </button>
-              <button 
-                className="delete-button"
-                onClick={handleDeleteEvent}
-              >
-                Delete
-              </button>
+              {isUserEvent(editingEvent) && (
+                <>
+                  <button 
+                    className="edit-button"
+                    onClick={() => {
+                      const newStart = new Date(editingEvent.start);
+                      const newEnd = new Date(editingEvent.end);
+                      handleEditEvent(newStart, newEnd);
+                    }}
+                  >
+                    Edit Time
+                  </button>
+                  <button 
+                    className="delete-button"
+                    onClick={handleDeleteEvent}
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
               <button 
                 className="cancel-button"
                 onClick={() => {
@@ -623,7 +644,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
                   setEditingEvent(null);
                 }}
               >
-                Cancel
+                Close
               </button>
             </div>
           </div>
