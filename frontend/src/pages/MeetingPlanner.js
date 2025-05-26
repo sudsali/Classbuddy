@@ -250,24 +250,16 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [tempEvent, setTempEvent] = useState(null);
 
-  // Reset states when meeting changes
-  useEffect(() => {
-    setCalendarData({
-      events: [],
-      members: [],
-      loading: true,
-      error: null
-    });
-    setSelectedSlot(null);
-    setTempEvent(null);
-  }, [meetingId]);
-
   // Fetch calendar data
   useEffect(() => {
+    let isMounted = true;
     const controller = new AbortController();
 
     const fetchCalendarData = async () => {
       try {
+        // Only proceed if component is still mounted
+        if (!isMounted) return;
+
         // Fetch both data in parallel with abort controller
         const [availabilityRes, groupRes] = await Promise.all([
           api.get(`/api/meetings/${meetingId}/availability/`, {
@@ -277,6 +269,9 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
             signal: controller.signal
           })
         ]);
+
+        // Only update state if component is still mounted
+        if (!isMounted) return;
 
         // Process availability data
         const events = (availabilityRes.data || []).map(slot => ({
@@ -297,8 +292,12 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
           error: null
         });
       } catch (error) {
-        if (error.name === 'AbortError') {
-          return; // Ignore abort errors
+        // Only handle errors if component is still mounted
+        if (!isMounted) return;
+
+        // Ignore cancellation errors
+        if (error.name === 'CanceledError' || error.name === 'AbortError') {
+          return;
         }
         
         console.error('Error fetching calendar data:', error);
@@ -310,14 +309,31 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       }
     };
 
+    // Only fetch if we have both IDs
     if (meetingId && groupId) {
       fetchCalendarData();
     }
 
+    // Cleanup function
     return () => {
-      controller.abort(); // Cancel any pending requests
+      isMounted = false;
+      // Only abort if there's an active request
+      if (controller.signal.aborted === false) {
+        controller.abort();
+      }
     };
   }, [meetingId, groupId, api]);
+
+  // Reset states when meeting changes
+  useEffect(() => {
+    setCalendarData(prev => ({
+      ...prev,
+      loading: true,
+      error: null
+    }));
+    setSelectedSlot(null);
+    setTempEvent(null);
+  }, [meetingId]);
 
   const handleSelect = async ({ start, end }) => {
     try {
