@@ -390,7 +390,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     return () => {
       isMounted = false;
     };
-  }, [meetingId, groupId]); // Remove api from dependencies since it's stable
+  }, [meetingId, groupId, api]); // Add api back to dependencies
 
   const calculateOverlaps = useCallback(() => {
     if (!Array.isArray(events) || events.length === 0) {
