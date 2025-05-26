@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import axios from 'axios';
@@ -241,88 +241,45 @@ const MeetingPlanner = () => {
 
 // Extracted the calendar component for better organization
 const MeetingCalendar = ({ meetingId, groupId, api }) => {
-  const [events, setEvents] = useState([]);
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [overlaps, setOverlaps] = useState([]);
+  const [calendarData, setCalendarData] = useState({
+    events: [],
+    members: [],
+    loading: true,
+    error: null
+  });
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [tempEvent, setTempEvent] = useState(null);
-  const [error, setError] = useState(null);
 
-  // Clear all states when meetingId changes
+  // Reset states when meeting changes
   useEffect(() => {
-    const clearStates = () => {
-      setEvents([]);
-      setMembers([]);
-      setOverlaps([]);
-      setSelectedSlot(null);
-      setTempEvent(null);
-      setLoading(true);
-    };
-
-    clearStates();
+    setCalendarData({
+      events: [],
+      members: [],
+      loading: true,
+      error: null
+    });
+    setSelectedSlot(null);
+    setTempEvent(null);
   }, [meetingId]);
 
-  const fetchAvailability = useCallback(async () => {
-    try {
-      const response = await api.get(`/api/meetings/${meetingId}/availability/`);
-      // Ensure response.data is an array before mapping
-      const availabilityData = Array.isArray(response.data) ? response.data : [];
-      const calendarEvents = availabilityData.map(slot => ({
-        id: slot.id,
-        title: `${slot.user.first_name} ${slot.user.last_name}`,
-        start: new Date(slot.start_time),
-        end: new Date(slot.end_time),
-        user: slot.user,
-      }));
-      setEvents(calendarEvents);
-    } catch (error) {
-      console.error('Error fetching availability:', error);
-      setEvents([]); // Set empty array on error
-    }
-  }, [api, meetingId]);
-
-  // Single effect to handle all data fetching
+  // Fetch calendar data
   useEffect(() => {
-    let isMounted = true;
-    let retryCount = 0;
-    const MAX_RETRIES = 3;
-    let isFetching = false; // Add flag to prevent concurrent fetches
+    const controller = new AbortController();
 
-    const fetchData = async () => {
-      // Prevent concurrent fetches
-      if (isFetching) return;
-      isFetching = true;
-
-      if (!isMounted) {
-        isFetching = false;
-        return;
-      }
-
+    const fetchCalendarData = async () => {
       try {
-        console.log('Fetching data for meeting:', meetingId, 'and group:', groupId);
-        
-        // Fetch availability first
-        const availabilityResponse = await api.get(`/api/meetings/${meetingId}/availability/`);
-        console.log('Availability response:', availabilityResponse.data);
-
-        if (!isMounted) {
-          isFetching = false;
-          return;
-        }
-
-        // Then fetch group data
-        const groupResponse = await api.get(`/api/study-groups/${groupId}/`);
-        console.log('Group response:', groupResponse.data);
-
-        if (!isMounted) {
-          isFetching = false;
-          return;
-        }
+        // Fetch both data in parallel with abort controller
+        const [availabilityRes, groupRes] = await Promise.all([
+          api.get(`/api/meetings/${meetingId}/availability/`, {
+            signal: controller.signal
+          }),
+          api.get(`/api/study-groups/${groupId}/`, {
+            signal: controller.signal
+          })
+        ]);
 
         // Process availability data
-        const availabilityData = Array.isArray(availabilityResponse.data) ? availabilityResponse.data : [];
-        const calendarEvents = availabilityData.map(slot => ({
+        const events = (availabilityRes.data || []).map(slot => ({
           id: slot.id,
           title: `${slot.user.first_name} ${slot.user.last_name}`,
           start: new Date(slot.start_time),
@@ -330,83 +287,94 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
           user: slot.user,
         }));
 
-        // Process group members data
-        const groupMembers = groupResponse.data?.members || [];
+        // Process group members
+        const members = groupRes.data?.members || [];
 
-        console.log('Processed calendar events:', calendarEvents);
-        console.log('Processed group members:', groupMembers);
-
-        // Update states in a single batch
-        if (isMounted) {
-          setEvents(calendarEvents);
-          setMembers(groupMembers);
-          setLoading(false);
-          setError(null);
-          retryCount = 0; // Reset retry count on success
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        console.error('Error details:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status
+        setCalendarData({
+          events,
+          members,
+          loading: false,
+          error: null
         });
-        
-        if (isMounted) {
-          // Retry logic
-          if (retryCount < MAX_RETRIES) {
-            retryCount++;
-            console.log(`Retrying fetch (attempt ${retryCount}/${MAX_RETRIES})...`);
-            setTimeout(() => {
-              isFetching = false;
-              fetchData();
-            }, 1000 * retryCount); // Exponential backoff
-            return;
-          }
-
-          setEvents([]);
-          setMembers([]);
-          setLoading(false);
-          setError(error.response?.data?.error || error.message || 'Failed to load calendar data');
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          return; // Ignore abort errors
         }
-      } finally {
-        isFetching = false;
+        
+        console.error('Error fetching calendar data:', error);
+        setCalendarData(prev => ({
+          ...prev,
+          loading: false,
+          error: error.response?.data?.error || error.message || 'Failed to load calendar data'
+        }));
       }
     };
 
-    // Only fetch if we have both meetingId and groupId
     if (meetingId && groupId) {
-      // Clear previous data and set loading state
-      setEvents([]);
-      setMembers([]);
-      setLoading(true);
-      setError(null);
-      
-      // Start fetching
-      fetchData();
+      fetchCalendarData();
     }
 
-    // Cleanup function
     return () => {
-      isMounted = false;
+      controller.abort(); // Cancel any pending requests
     };
-  }, [meetingId, groupId, api]); // Add api back to dependencies
+  }, [meetingId, groupId, api]);
 
-  const calculateOverlaps = useCallback(() => {
-    if (!Array.isArray(events) || events.length === 0) {
-      setOverlaps([]);
-      return;
+  const handleSelect = async ({ start, end }) => {
+    try {
+      // Create temporary event
+      const tempEvent = {
+        id: 'temp-' + Date.now(),
+        title: 'Your Availability',
+        start,
+        end,
+        user: { id: 'temp', first_name: 'You', last_name: '' },
+        isTemp: true
+      };
+      setTempEvent(tempEvent);
+
+      // Send availability to server
+      const response = await api.post(`/api/meetings/${meetingId}/availability/`, {
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+      });
+
+      // Add new availability to events
+      const newEvent = {
+        id: response.data.id,
+        title: response.data.user ? 
+          `${response.data.user.first_name} ${response.data.user.last_name}` :
+          'Your Availability',
+        start: new Date(response.data.start_time),
+        end: new Date(response.data.end_time),
+        user: response.data.user || { id: 'temp', first_name: 'You', last_name: '' },
+      };
+
+      setCalendarData(prev => ({
+        ...prev,
+        events: [...prev.events, newEvent]
+      }));
+      setSelectedSlot(newEvent);
+      setTempEvent(null);
+    } catch (error) {
+      console.error('Error adding availability:', error);
+      setTempEvent(null);
+      setCalendarData(prev => ({
+        ...prev,
+        error: error.response?.data?.error || error.message || 'Failed to add availability'
+      }));
     }
+  };
 
-    // Group events by their time slots
+  // Calculate overlaps whenever events change
+  const overlaps = useMemo(() => {
+    if (!calendarData.events.length) return [];
+
     const timeSlotMap = {};
     
-    events.forEach(event => {
-      if (!event.start || !event.end) return; // Skip invalid events
+    calendarData.events.forEach(event => {
+      if (!event.start || !event.end) return;
       
-      const startTime = event.start.getTime();
-      const endTime = event.end.getTime();
-      const key = `${startTime}-${endTime}`;
+      const key = `${event.start.getTime()}-${event.end.getTime()}`;
       
       if (!timeSlotMap[key]) {
         timeSlotMap[key] = {
@@ -421,8 +389,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       }
     });
     
-    // Convert to array of overlaps
-    const overlapArray = Object.values(timeSlotMap)
+    return Object.values(timeSlotMap)
       .filter(slot => slot.count > 1)
       .map((slot, index) => ({
         id: `overlap-${index}`,
@@ -433,142 +400,10 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
         count: slot.count,
         isOverlap: true
       }))
-      .sort((a, b) => b.count - a.count); // Sort by most overlap first
-    
-    setOverlaps(overlapArray);
-  }, [events]);
+      .sort((a, b) => b.count - a.count);
+  }, [calendarData.events]);
 
-  useEffect(() => {
-    calculateOverlaps();
-  }, [events, calculateOverlaps]);
-
-  const handleSelect = async ({ start, end }) => {
-    try {
-      // Create a temporary event for immediate display
-      const tempEvent = {
-        id: 'temp-' + Date.now(),
-        title: 'Your Availability',
-        start: start,
-        end: end,
-        user: { id: 'temp', first_name: 'You', last_name: '' },
-        isTemp: true
-      };
-      setTempEvent(tempEvent);
-
-      // Format the dates to ISO string format
-      const startTime = start.toISOString();
-      const endTime = end.toISOString();
-
-      console.log('Sending availability data:', { start_time: startTime, end_time: endTime });
-
-      const response = await api.post(`/api/meetings/${meetingId}/availability/`, {
-        start_time: startTime,
-        end_time: endTime,
-      });
-      
-      // Safely handle the response data
-      if (response?.data) {
-        // Add new availability to events
-        const newEvent = {
-          id: response.data.id || `event-${Date.now()}`,
-          title: response.data.user ? 
-            `${response.data.user.first_name || 'User'} ${response.data.user.last_name || ''}` :
-            'Your Availability',
-          start: new Date(response.data.start_time || startTime),
-          end: new Date(response.data.end_time || endTime),
-          user: response.data.user || { id: 'temp', first_name: 'You', last_name: '' },
-        };
-
-        setEvents(prev => [...prev, newEvent]);
-        setSelectedSlot(newEvent);
-      } else {
-        // If response data is not in expected format, create a basic event
-        const newEvent = {
-          id: `event-${Date.now()}`,
-          title: 'Your Availability',
-          start: start,
-          end: end,
-          user: { id: 'temp', first_name: 'You', last_name: '' },
-        };
-        setEvents(prev => [...prev, newEvent]);
-        setSelectedSlot(newEvent);
-      }
-
-      setTempEvent(null);
-
-      // Refresh the availability data
-      await fetchAvailability();
-    } catch (error) {
-      console.error('Error adding availability:', error);
-      console.error('Error response:', error.response?.data);
-      
-      // Create a basic event even if the API call fails
-      const newEvent = {
-        id: `event-${Date.now()}`,
-        title: 'Your Availability',
-        start: start,
-        end: end,
-        user: { id: 'temp', first_name: 'You', last_name: '' },
-      };
-      setEvents(prev => [...prev, newEvent]);
-      setSelectedSlot(newEvent);
-      
-      setTempEvent(null);
-    }
-  };
-
-  const eventPropGetter = (event) => {
-    if (event.isTemp) {
-      return {
-        style: {
-          backgroundColor: 'rgba(0, 123, 255, 0.5)',
-          borderRadius: '4px',
-          color: 'white',
-          border: '2px dashed #007bff',
-          display: 'block'
-        }
-      };
-    }
-
-    if (event.isOverlap) {
-      // Enhanced style for overlapping slots based on member count
-      // More members = darker color
-      const maxMembers = members.length;
-      
-      // Calculate how much to darken based on member count
-      const ratio = Math.min(event.count / maxMembers, 1); // Normalized ratio of available members
-      const lightness = 50 - (ratio * 25); // Will go from 50% to 25% lightness as more members are available
-      const darkerColor = `hsl(120, 45%, ${lightness}%)`;
-      
-      return {
-        style: {
-          backgroundColor: darkerColor,
-          borderRadius: '4px',
-          color: 'white',
-          fontWeight: 'bold',
-          border: '2px solid #2e7d32',
-          display: 'block'
-        }
-      };
-    }
-    
-    // Style for individual availability
-    const userIndex = members.findIndex(m => m.id === event.user.id);
-    const hue = (userIndex * 137.5) % 360; // Golden ratio for better color distribution
-    
-    return {
-      style: {
-        backgroundColor: `hsl(${hue}, 70%, 50%)`,
-        borderRadius: '4px',
-        opacity: 0.75,
-        color: 'white',
-        border: '0px',
-        display: 'block'
-      }
-    };
-  };
-
-  if (loading) {
+  if (calendarData.loading) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -577,18 +412,12 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     );
   }
 
-  if (error) {
+  if (calendarData.error) {
     return (
       <div className="error-container">
-        <p>Error loading calendar: {error}</p>
+        <p>Error: {calendarData.error}</p>
         <button 
-          onClick={() => {
-            setLoading(true);
-            setError(null);
-            // Trigger a re-fetch
-            const event = new Event('resize');
-            window.dispatchEvent(event);
-          }}
+          onClick={() => setCalendarData(prev => ({ ...prev, loading: true, error: null }))}
           className="retry-button"
         >
           Retry
@@ -598,7 +427,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   }
 
   // Combine regular events, overlaps, and temporary event for display
-  const displayEvents = [...events, ...overlaps];
+  const displayEvents = [...calendarData.events, ...overlaps];
   if (tempEvent) {
     displayEvents.push(tempEvent);
   }
@@ -618,9 +447,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
           views={['month', 'week', 'day']}
           defaultView="week"
           tooltipAccessor={(event) => {
-            if (event.isTemp) {
-              return 'Your selected availability';
-            }
+            if (event.isTemp) return 'Your selected availability';
             if (event.isOverlap) {
               return `${event.count} members available: ${event.users.map(u => `${u.first_name} ${u.last_name}`).join(', ')}`;
             }
@@ -633,11 +460,11 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       <div className="sidebar">
         <div className="legend">
           <h3>Member Availability</h3>
-          {members.length === 0 ? (
+          {calendarData.members.length === 0 ? (
             <p>No members in this group</p>
           ) : (
             <>
-              {members.map((member, index) => {
+              {calendarData.members.map((member, index) => {
                 const hue = (index * 137.5) % 360;
                 return (
                   <div key={member.id} className="legend-item">
