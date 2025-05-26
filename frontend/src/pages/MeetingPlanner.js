@@ -255,10 +255,23 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   // Get current user ID from token
   const getCurrentUserId = useCallback(() => {
     try {
-      // Get user data from sessionStorage
-      const userData = JSON.parse(sessionStorage.getItem('user'));
-      console.log('Current user data:', userData); // Debug log
-      return userData?.id || null;
+      // Get token from sessionStorage
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        console.log('No token found in sessionStorage');
+        return null;
+      }
+
+      // Get user data from localStorage (where it's typically stored during login)
+      const userData = JSON.parse(localStorage.getItem('user'));
+      console.log('User data from localStorage:', userData);
+      
+      if (!userData || !userData.id) {
+        console.log('No user data found in localStorage');
+        return null;
+      }
+
+      return userData.id;
     } catch (error) {
       console.error('Error getting user data:', error);
       return null;
@@ -267,9 +280,18 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
   const isUserEvent = useCallback((event) => {
     const currentUserId = getCurrentUserId();
-    console.log('Current user ID:', currentUserId); // Debug log
-    console.log('Event user ID:', event.user?.id); // Debug log
-    return event.user && String(event.user.id) === String(currentUserId);
+    console.log('Current user ID:', currentUserId);
+    console.log('Event user:', event.user);
+    console.log('Event user ID:', event.user?.id);
+    
+    // Check if both IDs exist and match
+    const isMatch = event.user && 
+                   event.user.id && 
+                   currentUserId && 
+                   String(event.user.id) === String(currentUserId);
+    
+    console.log('Is user event:', isMatch);
+    return isMatch;
   }, [getCurrentUserId]);
 
   // Fetch calendar data with retry logic
