@@ -250,7 +250,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
   const fetchAvailability = useCallback(async () => {
     try {
-      const response = await api.get(`/meetings/${meetingId}/availability/`);
+      const response = await api.get(`/api/meetings/${meetingId}/availability/`);
       // Ensure response.data is an array before mapping
       const availabilityData = Array.isArray(response.data) ? response.data : [];
       const calendarEvents = availabilityData.map(slot => ({
@@ -354,7 +354,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
       console.log('Sending availability data:', { start_time: startTime, end_time: endTime });
 
-      const response = await api.post(`/meetings/${meetingId}/availability/`, {
+      const response = await api.post(`/api/meetings/${meetingId}/availability/`, {
         start_time: startTime,
         end_time: endTime,
       });
