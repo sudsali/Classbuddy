@@ -249,6 +249,8 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   });
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [tempEvent, setTempEvent] = useState(null);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
 
   // Fetch calendar data
   useEffect(() => {
@@ -468,6 +470,69 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     };
   };
 
+  const handleEventSelect = (event) => {
+    setSelectedSlot(event);
+    setEditingEvent(event);
+    setShowEventModal(true);
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!editingEvent || editingEvent.isTemp || editingEvent.isOverlap) return;
+
+    try {
+      await api.delete(`/api/meetings/${meetingId}/availability/${editingEvent.id}/`);
+      
+      // Remove the event from the calendar
+      setCalendarData(prev => ({
+        ...prev,
+        events: prev.events.filter(e => e.id !== editingEvent.id)
+      }));
+      
+      setShowEventModal(false);
+      setEditingEvent(null);
+      setSelectedSlot(null);
+    } catch (error) {
+      console.error('Error deleting availability:', error);
+      setCalendarData(prev => ({
+        ...prev,
+        error: error.response?.data?.error || error.message || 'Failed to delete availability'
+      }));
+    }
+  };
+
+  const handleEditEvent = async (newStart, newEnd) => {
+    if (!editingEvent || editingEvent.isTemp || editingEvent.isOverlap) return;
+
+    try {
+      const response = await api.put(`/api/meetings/${meetingId}/availability/${editingEvent.id}/`, {
+        start_time: newStart.toISOString(),
+        end_time: newEnd.toISOString(),
+      });
+
+      // Update the event in the calendar
+      const updatedEvent = {
+        ...editingEvent,
+        start: new Date(response.data.start_time),
+        end: new Date(response.data.end_time),
+      };
+
+      setCalendarData(prev => ({
+        ...prev,
+        events: prev.events.map(e => e.id === editingEvent.id ? updatedEvent : e)
+      }));
+
+      setShowEventModal(false);
+      setEditingEvent(null);
+      setSelectedSlot(null);
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      setCalendarData(prev => ({
+        ...prev,
+        error: error.response?.data?.error || error.message || 'Failed to update availability'
+      }));
+    }
+  };
+
   if (calendarData.loading) {
     return (
       <div className="loading-container">
@@ -518,10 +583,52 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
             }
             return event.title;
           }}
-          onSelectEvent={(event) => setSelectedSlot(event)}
+          onSelectEvent={handleEventSelect}
           selected={selectedSlot}
         />
       </div>
+
+      {/* Event Modal */}
+      {showEventModal && editingEvent && !editingEvent.isTemp && !editingEvent.isOverlap && (
+        <div className="event-modal">
+          <div className="event-modal-content">
+            <h3>Edit Availability</h3>
+            <div className="event-details">
+              <p><strong>Start:</strong> {moment(editingEvent.start).format('MMMM D, YYYY h:mm A')}</p>
+              <p><strong>End:</strong> {moment(editingEvent.end).format('MMMM D, YYYY h:mm A')}</p>
+            </div>
+            <div className="event-actions">
+              <button 
+                className="edit-button"
+                onClick={() => {
+                  // Here you could add a date picker or other UI for editing times
+                  // For now, we'll just close the modal
+                  setShowEventModal(false);
+                  setEditingEvent(null);
+                }}
+              >
+                Edit Time
+              </button>
+              <button 
+                className="delete-button"
+                onClick={handleDeleteEvent}
+              >
+                Delete
+              </button>
+              <button 
+                className="cancel-button"
+                onClick={() => {
+                  setShowEventModal(false);
+                  setEditingEvent(null);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="sidebar">
         <div className="legend">
           <h3>Member Availability</h3>
