@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   FaCalendarAlt, 
@@ -15,18 +15,11 @@ import { NavLink } from 'react-router-dom';
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-
-  const menuItems = [
-    { icon: <FaUsers />, text: 'Groups', path: '/groups' },
-    { icon: <FaCalendarAlt />, text: 'Meeting Planner', path: '/meetings' },
-    { icon: <FaComments />, text: 'Direct Messages', path: '/messages' },
-  ];
 
   return (
     <div className="sidebar">
