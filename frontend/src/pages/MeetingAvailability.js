@@ -36,7 +36,7 @@ const MeetingAvailability = () => {
   const [dragging, setDragging] = useState(false);
   const [dragValue, setDragValue] = useState(true);
   const gridRef = useRef(null);
-  const [days, setDays] = useState(getNext7Days());
+  const [days] = useState(getNext7Days());
 
   // Fetch group members and all availabilities
   useEffect(() => {
