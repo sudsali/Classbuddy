@@ -257,6 +257,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     try {
       // Get user data from sessionStorage
       const userData = JSON.parse(sessionStorage.getItem('user'));
+      console.log('Current user data:', userData); // Debug log
       return userData?.id || null;
     } catch (error) {
       console.error('Error getting user data:', error);
@@ -266,30 +267,34 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
   const isUserEvent = useCallback((event) => {
     const currentUserId = getCurrentUserId();
-    return event.user && event.user.id === currentUserId;
+    console.log('Current user ID:', currentUserId); // Debug log
+    console.log('Event user ID:', event.user?.id); // Debug log
+    return event.user && String(event.user.id) === String(currentUserId);
   }, [getCurrentUserId]);
 
-  // Fetch calendar data
+  // Fetch calendar data with retry logic
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
+    let retryCount = 0;
+    const maxRetries = 3;
 
     const fetchCalendarData = async () => {
       try {
-        // Only proceed if component is still mounted
         if (!isMounted) return;
 
         // Fetch both data in parallel with abort controller
         const [availabilityRes, groupRes] = await Promise.all([
           api.get(`/api/meetings/${meetingId}/availability/`, {
-            signal: controller.signal
+            signal: controller.signal,
+            timeout: 10000 // 10 second timeout
           }),
           api.get(`/api/study-groups/${groupId}/`, {
-            signal: controller.signal
+            signal: controller.signal,
+            timeout: 10000
           })
         ]);
 
-        // Only update state if component is still mounted
         if (!isMounted) return;
 
         // Process availability data
@@ -311,15 +316,23 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
           error: null
         });
       } catch (error) {
-        // Only handle errors if component is still mounted
         if (!isMounted) return;
 
         // Ignore cancellation errors
         if (error.name === 'CanceledError' || error.name === 'AbortError') {
           return;
         }
-        
+
         console.error('Error fetching calendar data:', error);
+        
+        // Retry logic for network errors
+        if (error.code === 'ERR_NETWORK' && retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Retrying... Attempt ${retryCount} of ${maxRetries}`);
+          setTimeout(fetchCalendarData, 1000 * retryCount); // Exponential backoff
+          return;
+        }
+
         setCalendarData(prev => ({
           ...prev,
           loading: false,
@@ -328,15 +341,12 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       }
     };
 
-    // Only fetch if we have both IDs
     if (meetingId && groupId) {
       fetchCalendarData();
     }
 
-    // Cleanup function
     return () => {
       isMounted = false;
-      // Only abort if there's an active request
       if (controller.signal.aborted === false) {
         controller.abort();
       }
