@@ -403,6 +403,55 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       .sort((a, b) => b.count - a.count);
   }, [calendarData.events]);
 
+  // Style getter for calendar events
+  const eventPropGetter = (event) => {
+    if (event.isTemp) {
+      return {
+        style: {
+          backgroundColor: 'rgba(0, 123, 255, 0.5)',
+          borderRadius: '4px',
+          color: 'white',
+          border: '2px dashed #007bff',
+          display: 'block'
+        }
+      };
+    }
+
+    if (event.isOverlap) {
+      // Enhanced style for overlapping slots based on member count
+      const maxMembers = calendarData.members.length;
+      const ratio = Math.min(event.count / maxMembers, 1);
+      const lightness = 50 - (ratio * 25);
+      const darkerColor = `hsl(120, 45%, ${lightness}%)`;
+      
+      return {
+        style: {
+          backgroundColor: darkerColor,
+          borderRadius: '4px',
+          color: 'white',
+          fontWeight: 'bold',
+          border: '2px solid #2e7d32',
+          display: 'block'
+        }
+      };
+    }
+    
+    // Style for individual availability
+    const userIndex = calendarData.members.findIndex(m => m.id === event.user.id);
+    const hue = (userIndex * 137.5) % 360; // Golden ratio for better color distribution
+    
+    return {
+      style: {
+        backgroundColor: `hsl(${hue}, 70%, 50%)`,
+        borderRadius: '4px',
+        opacity: 0.75,
+        color: 'white',
+        border: '0px',
+        display: 'block'
+      }
+    };
+  };
+
   if (calendarData.loading) {
     return (
       <div className="loading-container">
