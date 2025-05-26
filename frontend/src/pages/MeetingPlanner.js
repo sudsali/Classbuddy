@@ -287,9 +287,17 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     let isMounted = true;
     let retryCount = 0;
     const MAX_RETRIES = 3;
+    let isFetching = false; // Add flag to prevent concurrent fetches
 
     const fetchData = async () => {
-      if (!isMounted) return;
+      // Prevent concurrent fetches
+      if (isFetching) return;
+      isFetching = true;
+
+      if (!isMounted) {
+        isFetching = false;
+        return;
+      }
 
       try {
         console.log('Fetching data for meeting:', meetingId, 'and group:', groupId);
@@ -298,13 +306,19 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
         const availabilityResponse = await api.get(`/api/meetings/${meetingId}/availability/`);
         console.log('Availability response:', availabilityResponse.data);
 
-        if (!isMounted) return;
+        if (!isMounted) {
+          isFetching = false;
+          return;
+        }
 
         // Then fetch group data
         const groupResponse = await api.get(`/api/study-groups/${groupId}/`);
         console.log('Group response:', groupResponse.data);
 
-        if (!isMounted) return;
+        if (!isMounted) {
+          isFetching = false;
+          return;
+        }
 
         // Process availability data
         const availabilityData = Array.isArray(availabilityResponse.data) ? availabilityResponse.data : [];
@@ -343,7 +357,10 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
           if (retryCount < MAX_RETRIES) {
             retryCount++;
             console.log(`Retrying fetch (attempt ${retryCount}/${MAX_RETRIES})...`);
-            setTimeout(fetchData, 1000 * retryCount); // Exponential backoff
+            setTimeout(() => {
+              isFetching = false;
+              fetchData();
+            }, 1000 * retryCount); // Exponential backoff
             return;
           }
 
@@ -352,23 +369,28 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
           setLoading(false);
           setError(error.response?.data?.error || error.message || 'Failed to load calendar data');
         }
+      } finally {
+        isFetching = false;
       }
     };
 
-    // Clear previous data and set loading state
-    setEvents([]);
-    setMembers([]);
-    setLoading(true);
-    setError(null);
-    
-    // Start fetching
-    fetchData();
+    // Only fetch if we have both meetingId and groupId
+    if (meetingId && groupId) {
+      // Clear previous data and set loading state
+      setEvents([]);
+      setMembers([]);
+      setLoading(true);
+      setError(null);
+      
+      // Start fetching
+      fetchData();
+    }
 
     // Cleanup function
     return () => {
       isMounted = false;
     };
-  }, [meetingId, groupId, api]);
+  }, [meetingId, groupId]); // Remove api from dependencies since it's stable
 
   const calculateOverlaps = useCallback(() => {
     if (!Array.isArray(events) || events.length === 0) {
