@@ -285,6 +285,8 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   // Single effect to handle all data fetching
   useEffect(() => {
     let isMounted = true;
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
 
     const fetchData = async () => {
       if (!isMounted) return;
@@ -292,16 +294,17 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       try {
         console.log('Fetching data for meeting:', meetingId, 'and group:', groupId);
         
-        // Fetch both data in parallel
-        const [availabilityResponse, groupResponse] = await Promise.all([
-          api.get(`/api/meetings/${meetingId}/availability/`),
-          api.get(`/api/study-groups/${groupId}/`)
-        ]);
+        // Fetch availability first
+        const availabilityResponse = await api.get(`/api/meetings/${meetingId}/availability/`);
+        console.log('Availability response:', availabilityResponse.data);
 
         if (!isMounted) return;
 
-        console.log('Availability response:', availabilityResponse.data);
+        // Then fetch group data
+        const groupResponse = await api.get(`/api/study-groups/${groupId}/`);
         console.log('Group response:', groupResponse.data);
+
+        if (!isMounted) return;
 
         // Process availability data
         const availabilityData = Array.isArray(availabilityResponse.data) ? availabilityResponse.data : [];
@@ -324,7 +327,8 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
           setEvents(calendarEvents);
           setMembers(groupMembers);
           setLoading(false);
-          setError(null); // Clear any previous errors
+          setError(null);
+          retryCount = 0; // Reset retry count on success
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -335,6 +339,14 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
         });
         
         if (isMounted) {
+          // Retry logic
+          if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            console.log(`Retrying fetch (attempt ${retryCount}/${MAX_RETRIES})...`);
+            setTimeout(fetchData, 1000 * retryCount); // Exponential backoff
+            return;
+          }
+
           setEvents([]);
           setMembers([]);
           setLoading(false);
@@ -343,6 +355,13 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       }
     };
 
+    // Clear previous data and set loading state
+    setEvents([]);
+    setMembers([]);
+    setLoading(true);
+    setError(null);
+    
+    // Start fetching
     fetchData();
 
     // Cleanup function
@@ -528,11 +547,32 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   };
 
   if (loading) {
-    return <div className="loading-container">Loading calendar data...</div>;
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading calendar data...</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error-container">Error loading calendar: {error}</div>;
+    return (
+      <div className="error-container">
+        <p>Error loading calendar: {error}</p>
+        <button 
+          onClick={() => {
+            setLoading(true);
+            setError(null);
+            // Trigger a re-fetch
+            const event = new Event('resize');
+            window.dispatchEvent(event);
+          }}
+          className="retry-button"
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   // Combine regular events, overlaps, and temporary event for display
