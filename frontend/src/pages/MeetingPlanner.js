@@ -102,7 +102,8 @@ const MeetingPlanner = () => {
         studyGroupId: '',
         location: ''
       });
-      fetchMeetings();
+      // Redirect to the new availability selection page
+      navigate(`/meetings/${response.data.id}/availability`);
     } catch (error) {
       console.error('Error creating meeting:', error);
       setError(error.response?.data?.error || 'Failed to create meeting. Please try again.');

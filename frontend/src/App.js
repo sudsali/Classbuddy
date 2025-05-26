@@ -13,6 +13,7 @@ import DirectMessages from './pages/DirectMessages';
 import './styles/theme.css';
 import './App.css';
 import ForgotPassword from './pages/ForgetPassword';
+import MeetingAvailability from './pages/MeetingAvailability';
 
 // Import your other page components here
 //const Meetings = () => <div>Meeting Planner</div>;
@@ -54,6 +55,7 @@ const App = () => {
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/" element={<Navigate to="/groups" replace />} />
           <Route path="/meetings" element={<PrivateRoute><MeetingPlanner /></PrivateRoute>} />
+          <Route path="/meetings/:meetingId/availability" element={<PrivateRoute><MeetingAvailability /></PrivateRoute>} />
           <Route path="/groups" element={<PrivateRoute><Groups /></PrivateRoute>} />
           <Route path="/messages" element={<PrivateRoute><DirectMessages /></PrivateRoute>} />
         </Routes>
