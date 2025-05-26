@@ -278,26 +278,33 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
   const fetchGroupMembers = useCallback(async () => {
     try {
-      const response = await api.get(`/api/study-groups/${groupId}/members/`);
-      // Ensure response.data is an array before setting
-      setMembers(Array.isArray(response.data) ? response.data : []);
+      // First get the study group details to get the members
+      const response = await api.get(`/api/study-groups/${groupId}/`);
+      if (response.data && response.data.members) {
+        setMembers(response.data.members);
+      } else {
+        setMembers([]);
+      }
     } catch (error) {
       console.error('Error fetching group members:', error);
       setMembers([]); // Set empty array on error
     }
   }, [api, groupId]);
 
-  // Combined data fetching effect
+  // Combined data fetching effect with better error handling
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        await Promise.all([
-          fetchAvailability(),
-          fetchGroupMembers()
-        ]);
+        // Fetch availability first
+        await fetchAvailability();
+        // Then fetch group members
+        await fetchGroupMembers();
       } catch (error) {
         console.error('Error fetching data:', error);
+        // Set empty arrays on error
+        setEvents([]);
+        setMembers([]);
       } finally {
         setLoading(false);
       }
