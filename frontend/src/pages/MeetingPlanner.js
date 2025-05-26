@@ -248,8 +248,19 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [tempEvent, setTempEvent] = useState(null);
 
+  // Clear all states when meetingId changes
+  useEffect(() => {
+    setEvents([]);
+    setMembers([]);
+    setOverlaps([]);
+    setSelectedSlot(null);
+    setTempEvent(null);
+    setLoading(true);
+  }, [meetingId]);
+
   const fetchAvailability = useCallback(async () => {
     try {
+      setLoading(true);
       const response = await api.get(`/api/meetings/${meetingId}/availability/`);
       // Ensure response.data is an array before mapping
       const availabilityData = Array.isArray(response.data) ? response.data : [];
@@ -264,12 +275,15 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     } catch (error) {
       console.error('Error fetching availability:', error);
       setEvents([]); // Set empty array on error
+    } finally {
+      setLoading(false);
     }
   }, [api, meetingId]);
 
   const fetchGroupMembers = useCallback(async () => {
     try {
-      const response = await api.get(`/study-groups/${groupId}/members/`);
+      setLoading(true);
+      const response = await api.get(`/api/study-groups/${groupId}/members/`);
       // Ensure response.data is an array before setting
       setMembers(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
