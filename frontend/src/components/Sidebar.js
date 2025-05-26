@@ -10,6 +10,7 @@ import {
   FaSignOutAlt
 } from 'react-icons/fa';
 import './Sidebar.css';
+import { NavLink } from 'react-router-dom';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
@@ -47,16 +48,18 @@ const Sidebar = () => {
       </div>
 
       <nav className="sidebar-nav">
-        {menuItems.map((item, index) => (
-          <Link 
-            to={item.path} 
-            key={index} 
-            className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            <span className="nav-text">{item.text}</span>
-          </Link>
-        ))}
+        <NavLink to="/groups" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+          <FaUsers className="nav-icon" />
+          <span>Groups</span>
+        </NavLink>
+        <NavLink to="/meetings" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+          <FaCalendarAlt className="nav-icon" />
+          <span>Meeting Planner</span>
+        </NavLink>
+        <NavLink to="/messages" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+          <FaComments className="nav-icon" />
+          <span>Direct Messages</span>
+        </NavLink>
       </nav>
 
       <div className="logout-container">

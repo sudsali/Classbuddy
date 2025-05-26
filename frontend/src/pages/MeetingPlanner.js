@@ -4,6 +4,7 @@ import moment from 'moment';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { FaArrowLeft, FaPlus } from 'react-icons/fa';
 import './MeetingPlanner.css';
 
 const localizer = momentLocalizer(moment);
@@ -14,12 +15,16 @@ const MeetingPlanner = () => {
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [formVisible, setFormVisible] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [studyGroups, setStudyGroups] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    study_group: ''
+    date: '',
+    startTime: '',
+    endTime: '',
+    studyGroupId: '',
+    location: ''
   });
 
   // Get the auth token from sessionStorage
@@ -61,7 +66,6 @@ const MeetingPlanner = () => {
     fetchStudyGroups();
   }, [fetchMeetings, fetchStudyGroups]);
 
-  // Handle input changes for the meeting creation form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -70,77 +74,72 @@ const MeetingPlanner = () => {
     }));
   };
 
-  // Handle form submission to create a new meeting
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('Submitting meeting data:', formData); // Debug log
-
-      // First, get the study group details
-      const groupResponse = await api.get(`/api/study-groups/${formData.study_group}/`);
-      const studyGroup = groupResponse.data;
-
-      // Create the meeting with properly formatted data
+      // Format the meeting data
       const meetingData = {
         title: formData.title,
         description: formData.description,
-        study_group_id: formData.study_group // Make sure this matches the serializer field
+        study_group_id: formData.studyGroupId,
+        date: formData.date,
+        start_time: formData.startTime,
+        end_time: formData.endTime,
+        location: formData.location
       };
 
-      console.log('Sending meeting data to API:', meetingData); // Debug log
-
+      console.log('Sending meeting data to API:', meetingData);
       const response = await api.post('/api/meetings/', meetingData);
-      console.log('Meeting creation response:', response.data); // Debug log
+      console.log('Meeting creation response:', response.data);
 
-      // Add the study group details to the meeting data
-      const newMeeting = {
-        ...response.data,
-        study_group: studyGroup
-      };
-
-      // Update the meetings list
-      setMeetings(prev => [...prev, newMeeting]);
-      setSelectedMeeting(newMeeting);
-      
-      // Reset form
+      setShowForm(false);
       setFormData({
         title: '',
         description: '',
-        study_group: ''
+        date: '',
+        startTime: '',
+        endTime: '',
+        studyGroupId: '',
+        location: ''
       });
-      setFormVisible(false);
+      fetchMeetings();
     } catch (error) {
       console.error('Error creating meeting:', error);
-      console.error('Error response data:', error.response?.data); // Log the error response
       setError(error.response?.data?.error || 'Failed to create meeting. Please try again.');
     }
   };
 
+  const handleMeetingSelect = (meeting) => {
+    setSelectedMeeting(meeting);
+  };
+
   if (loading) {
-    return <div className="loading-container">Loading...</div>;
+    return (
+      <div className="meeting-planner">
+        <div className="loading-container">
+          Loading meetings...
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="meeting-planner">
       <div className="meeting-planner-header">
         <div className="header-left">
-          <button 
-            className="back-button"
-            onClick={() => navigate('/groups')}
-          >
-            ← Back to Groups
+          <button className="back-button" onClick={() => navigate(-1)}>
+            <FaArrowLeft /> Back
           </button>
           <h1>Meeting Planner</h1>
         </div>
-        <button 
-          className="create-meeting-btn"
-          onClick={() => setFormVisible(!formVisible)}
-        >
-          {formVisible ? 'Cancel' : 'Create New Meeting'}
+        <button className="create-meeting-btn" onClick={() => setShowForm(true)}>
+          <FaPlus /> Create Meeting
         </button>
       </div>
 
-      {formVisible && (
+      {error && <div className="error-message">{error}</div>}
+
+      {showForm && (
         <div className="create-meeting-form">
           <h2>Create New Meeting</h2>
           <form onSubmit={handleSubmit}>
@@ -155,6 +154,7 @@ const MeetingPlanner = () => {
                 required
               />
             </div>
+
             <div className="form-group">
               <label htmlFor="description">Description</label>
               <textarea
@@ -162,29 +162,85 @@ const MeetingPlanner = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
+                required
               />
             </div>
+
             <div className="form-group">
-              <label htmlFor="study_group">Study Group</label>
+              <label htmlFor="studyGroupId">Study Group</label>
               <select
-                id="study_group"
-                name="study_group"
-                value={formData.study_group}
+                id="studyGroupId"
+                name="studyGroupId"
+                value={formData.studyGroupId}
                 onChange={handleInputChange}
                 required
               >
                 <option value="">Select a study group</option>
                 {studyGroups.map(group => (
-                  <option key={group.id} value={group.id}>{group.name}</option>
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
                 ))}
               </select>
             </div>
+
+            <div className="form-group">
+              <label htmlFor="date">Date</label>
+              <input
+                type="date"
+                id="date"
+                name="date"
+                value={formData.date}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="startTime">Start Time</label>
+              <input
+                type="time"
+                id="startTime"
+                name="startTime"
+                value={formData.startTime}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="endTime">End Time</label>
+              <input
+                type="time"
+                id="endTime"
+                name="endTime"
+                value={formData.endTime}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="location">Location</label>
+              <input
+                type="text"
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                placeholder="Enter meeting location or video call link"
+                required
+              />
+            </div>
+
             <div className="form-actions">
-              <button type="submit" className="btn-primary">Create Meeting</button>
-              <button 
-                type="button" 
+              <button type="submit" className="btn-primary">
+                Create Meeting
+              </button>
+              <button
+                type="button"
                 className="btn-secondary"
-                onClick={() => setFormVisible(false)}
+                onClick={() => setShowForm(false)}
               >
                 Cancel
               </button>
@@ -195,22 +251,23 @@ const MeetingPlanner = () => {
 
       <div className="meeting-planner-content">
         <div className="meetings-list">
-          <h2>Your Meetings</h2>
-          {error && <div className="error-message">{error}</div>}
-          {meetings.length === 0 ? (
-            <p className="empty-state">No meetings found. Create a new meeting to get started.</p>
+          <h2>Upcoming Meetings</h2>
+          {!Array.isArray(meetings) || meetings.length === 0 ? (
+            <div className="empty-state">No upcoming meetings</div>
           ) : (
             <div className="meetings-grid">
               {meetings.map(meeting => (
                 <div
                   key={meeting.id}
                   className={`meeting-card ${selectedMeeting?.id === meeting.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedMeeting(meeting)}
+                  onClick={() => handleMeetingSelect(meeting)}
                 >
                   <h3>{meeting.title}</h3>
                   <p>{meeting.description}</p>
                   <div className="meeting-meta">
-                    <span>Group: {meeting.study_group.name}</span>
+                    <div>Date: {new Date(meeting.date).toLocaleDateString()}</div>
+                    <div>Time: {meeting.start_time} - {meeting.end_time}</div>
+                    <div>Location: {meeting.location}</div>
                   </div>
                 </div>
               ))}
@@ -218,22 +275,52 @@ const MeetingPlanner = () => {
           )}
         </div>
 
-        {selectedMeeting && (
-          <div className="calendar-section">
-            <div className="calendar-header">
-              <h2>{selectedMeeting.title}</h2>
-              <p className="calendar-description">
-                Click and drag on the calendar to select time slots when you're available.
-                Other members' availability will appear in color-coded blocks.
-              </p>
-            </div>
-            <MeetingCalendar
-              meetingId={selectedMeeting.id}
-              groupId={selectedMeeting.study_group.id}
-              api={api}
-            />
+        <div className="calendar-section">
+          <div className="calendar-header">
+            <h2>Calendar View</h2>
+            <p className="calendar-description">
+              Select a meeting to view its details and manage availability
+            </p>
           </div>
-        )}
+          {selectedMeeting ? (
+            <div className="meeting-planner-calendar">
+              <div className="calendar-container">
+                <MeetingCalendar
+                  meetingId={selectedMeeting.id}
+                  groupId={selectedMeeting.study_group.id}
+                  api={api}
+                />
+              </div>
+              <div className="sidebar">
+                <div className="legend">
+                  <h3>Availability Legend</h3>
+                  <div className="legend-item">
+                    <div className="color-box" style={{ backgroundColor: '#4CAF50' }} />
+                    <span>Available</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="color-box" style={{ backgroundColor: '#FFC107' }} />
+                    <span>Partially Available</span>
+                  </div>
+                  <div className="legend-item">
+                    <div className="color-box" style={{ backgroundColor: '#F44336' }} />
+                    <span>Unavailable</span>
+                  </div>
+                </div>
+                <div className="best-times">
+                  <h3>Best Meeting Times</h3>
+                  <div className="best-times-list">
+                    {/* Best times will be populated here */}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="empty-state">
+              Select a meeting to view its calendar and manage availability
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -250,8 +337,10 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
   const fetchAvailability = useCallback(async () => {
     try {
-      const response = await api.get(`/meetings/${meetingId}/availability/`);
-      const availabilityData = response.data;
+      const response = await api.get(`/api/meetings/${meetingId}/availability/`);
+      const availabilityData = Array.isArray(response.data) ? response.data : [];
+      
+      // Transform availability data into calendar events
       const calendarEvents = availabilityData.map(slot => ({
         id: slot.id,
         title: `${slot.user.first_name} ${slot.user.last_name}`,
@@ -267,7 +356,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
   const fetchGroupMembers = useCallback(async () => {
     try {
-      const response = await api.get(`/study-groups/${groupId}/members/`);
+      const response = await api.get(`/api/study-groups/${groupId}/members/`);
       setMembers(response.data);
     } catch (error) {
       console.error('Error fetching group members:', error);
@@ -277,7 +366,10 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   }, [api, groupId]);
 
   const calculateOverlaps = useCallback(() => {
-    if (events.length === 0) return;
+    if (!Array.isArray(events) || events.length === 0) {
+      setOverlaps([]);
+      return;
+    }
 
     // Group events by their time slots
     const timeSlotMap = {};
@@ -343,9 +435,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       const startTime = start.toISOString();
       const endTime = end.toISOString();
 
-      console.log('Sending availability data:', { start_time: startTime, end_time: endTime });
-
-      const response = await api.post(`/meetings/${meetingId}/availability/`, {
+      const response = await api.post(`/api/meetings/${meetingId}/availability/`, {
         start_time: startTime,
         end_time: endTime,
       });
@@ -367,7 +457,6 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       fetchAvailability();
     } catch (error) {
       console.error('Error adding availability:', error);
-      console.error('Error response:', error.response?.data);
       setTempEvent(null);
     }
   };
@@ -387,12 +476,9 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
 
     if (event.isOverlap) {
       // Enhanced style for overlapping slots based on member count
-      // More members = darker color
       const maxMembers = members.length;
-      
-      // Calculate how much to darken based on member count
-      const ratio = Math.min(event.count / maxMembers, 1); // Normalized ratio of available members
-      const lightness = 50 - (ratio * 25); // Will go from 50% to 25% lightness as more members are available
+      const ratio = Math.min(event.count / maxMembers, 1);
+      const lightness = 50 - (ratio * 25);
       const darkerColor = `hsl(120, 45%, ${lightness}%)`;
       
       return {
@@ -409,7 +495,7 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
     
     // Style for individual availability
     const userIndex = members.findIndex(m => m.id === event.user.id);
-    const hue = (userIndex * 137.5) % 360; // Golden ratio for better color distribution
+    const hue = (userIndex * 137.5) % 360;
     
     return {
       style: {
