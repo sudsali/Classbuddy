@@ -1,9 +1,6 @@
 .app {
-  display: flex;
   min-height: 100vh;
-  background-color: #f5f5f5;
 }
-
 .code-input-wrapper {
   display: flex;
   justify-content: center;
@@ -30,10 +27,9 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: #666;
 }
-
 .link-button {
   background: none;
   border: none;
@@ -49,11 +45,9 @@
 }
 
 .main-content {
-  flex: 1;
-  margin-left: 250px;
+  margin-left: 220px;
   padding: 2rem;
-  min-height: 100vh;
-  background-color: #f5f5f5;
+  width: 100%;
 }
 
 .header {
@@ -81,20 +75,4 @@
 
 .logout-button:hover {
   background-color: #c82333;
-}
-
-.main-layout {
-  flex: 1;
-  margin-left: 250px;
-  padding: 2rem;
-  min-height: 100vh;
-  background-color: #f5f5f5;
-}
-
-@media (max-width: 768px) {
-  .main-content,
-  .main-layout {
-    margin-left: 64px;
-    padding: 1rem;
-  }
 } 
