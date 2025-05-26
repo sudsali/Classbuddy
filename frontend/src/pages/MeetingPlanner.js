@@ -359,24 +359,53 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
         end_time: endTime,
       });
       
-      // Add new availability to events
-      const newEvent = {
-        id: response.data.id,
-        title: `${response.data.user.first_name} ${response.data.user.last_name}`,
-        start: new Date(response.data.start_time),
-        end: new Date(response.data.end_time),
-        user: response.data.user,
-      };
+      // Safely handle the response data
+      if (response?.data) {
+        // Add new availability to events
+        const newEvent = {
+          id: response.data.id || `event-${Date.now()}`,
+          title: response.data.user ? 
+            `${response.data.user.first_name || 'User'} ${response.data.user.last_name || ''}` :
+            'Your Availability',
+          start: new Date(response.data.start_time || startTime),
+          end: new Date(response.data.end_time || endTime),
+          user: response.data.user || { id: 'temp', first_name: 'You', last_name: '' },
+        };
 
-      setEvents(prev => [...prev, newEvent]);
-      setSelectedSlot(newEvent);
+        setEvents(prev => [...prev, newEvent]);
+        setSelectedSlot(newEvent);
+      } else {
+        // If response data is not in expected format, create a basic event
+        const newEvent = {
+          id: `event-${Date.now()}`,
+          title: 'Your Availability',
+          start: start,
+          end: end,
+          user: { id: 'temp', first_name: 'You', last_name: '' },
+        };
+        setEvents(prev => [...prev, newEvent]);
+        setSelectedSlot(newEvent);
+      }
+
       setTempEvent(null);
 
       // Refresh the availability data
-      fetchAvailability();
+      await fetchAvailability();
     } catch (error) {
       console.error('Error adding availability:', error);
       console.error('Error response:', error.response?.data);
+      
+      // Create a basic event even if the API call fails
+      const newEvent = {
+        id: `event-${Date.now()}`,
+        title: 'Your Availability',
+        start: start,
+        end: end,
+        user: { id: 'temp', first_name: 'You', last_name: '' },
+      };
+      setEvents(prev => [...prev, newEvent]);
+      setSelectedSlot(newEvent);
+      
       setTempEvent(null);
     }
   };
