@@ -251,20 +251,32 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   const [tempEvent, setTempEvent] = useState(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState(null);
 
-  // Fetch current user data
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      try {
-        const response = await api.get('/api/users/me/');
-        setCurrentUserId(response.data.id);
-      } catch (error) {
-        console.error('Error fetching current user:', error);
-      }
-    };
-    fetchCurrentUser();
-  }, [api]);
+  // Get current user ID from token
+  const getCurrentUserId = useCallback(() => {
+    const token = sessionStorage.getItem('token');
+    if (!token) return null;
+    
+    try {
+      // Decode the JWT token to get user info
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      const userData = JSON.parse(jsonPayload);
+      return userData.user_id;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  }, []);
+
+  const isUserEvent = useCallback((event) => {
+    const currentUserId = getCurrentUserId();
+    return event.user && event.user.id === currentUserId;
+  }, [getCurrentUserId]);
 
   // Fetch calendar data
   useEffect(() => {
@@ -546,10 +558,6 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
       }));
     }
   };
-
-  const isUserEvent = useCallback((event) => {
-    return event.user && event.user.id === currentUserId;
-  }, [currentUserId]);
 
   if (calendarData.loading) {
     return (
