@@ -252,8 +252,8 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
 
-  // Get current user ID from token
-  const getCurrentUserId = useCallback(() => {
+  // Get current user email from token
+  const getCurrentUserEmail = useCallback(() => {
     try {
       // Get token from sessionStorage
       const token = sessionStorage.getItem('token');
@@ -262,16 +262,16 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
         return null;
       }
 
-      // Get user data from localStorage (where it's typically stored during login)
-      const userData = JSON.parse(localStorage.getItem('user'));
-      console.log('User data from localStorage:', userData);
+      // Get user data from sessionStorage
+      const userData = JSON.parse(sessionStorage.getItem('userData'));
+      console.log('User data from sessionStorage:', userData);
       
-      if (!userData || !userData.id) {
-        console.log('No user data found in localStorage');
+      if (!userData || !userData.email) {
+        console.log('No user data found in sessionStorage');
         return null;
       }
 
-      return userData.id;
+      return userData.email;
     } catch (error) {
       console.error('Error getting user data:', error);
       return null;
@@ -279,20 +279,20 @@ const MeetingCalendar = ({ meetingId, groupId, api }) => {
   }, []);
 
   const isUserEvent = useCallback((event) => {
-    const currentUserId = getCurrentUserId();
-    console.log('Current user ID:', currentUserId);
+    const currentUserEmail = getCurrentUserEmail();
+    console.log('Current user email:', currentUserEmail);
     console.log('Event user:', event.user);
-    console.log('Event user ID:', event.user?.id);
+    console.log('Event user email:', event.user?.email);
     
-    // Check if both IDs exist and match
+    // Check if both emails exist and match
     const isMatch = event.user && 
-                   event.user.id && 
-                   currentUserId && 
-                   String(event.user.id) === String(currentUserId);
+                   event.user.email && 
+                   currentUserEmail && 
+                   event.user.email === currentUserEmail;
     
     console.log('Is user event:', isMatch);
     return isMatch;
-  }, [getCurrentUserId]);
+  }, [getCurrentUserEmail]);
 
   // Fetch calendar data with retry logic
   useEffect(() => {
