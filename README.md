@@ -101,4 +101,4 @@ REACT_APP_API_URL=http://localhost:8000
 
 ## Study Group page:
 
-<img src="https://drive.google.com/uc?export=view&id=1ptqOJqDaKcMxvJaX1w6v03zKXsRo_65b" alt="Image" width="700"/>
+<img src="https://drive.google.com/file/d/183B9nZa0Dhzqxh6Hq0bAFHPIkzy0k7fa/view?usp=sharing" alt="Image" width="700"/>
