@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import './Groups.css';
@@ -16,8 +16,6 @@ const Groups = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTasksModal, setShowTasksModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedTitle, setEditedTitle] = useState('');
   const [newGroup, setNewGroup] = useState({
     name: '',
     description: '',
@@ -41,20 +39,45 @@ const Groups = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearchFormVisible, setIsSearchFormVisible] = useState(false);
 
-  useEffect(() => {
-    fetchGroups();
+  const fetchGroups = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/study-groups/`, {
+        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
+      });
+      setGroups(response.data);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+      setError('Failed to load study groups. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchMessages = useCallback(async (groupId) => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/study-groups/${groupId}/messages/`, {
+        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
   }, []);
 
   useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
+
+  useEffect(() => {
+    let interval;
     if (showChatModal && selectedGroup) {
       fetchMessages(selectedGroup.id);
-      
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         fetchMessages(selectedGroup.id);
       }, 3000);
-      
       setMessagePollingInterval(interval);
-      
       return () => {
         if (interval) {
           clearInterval(interval);
@@ -66,28 +89,13 @@ const Groups = () => {
         setMessagePollingInterval(null);
       }
     }
-  }, [showChatModal, selectedGroup]);
-
-  const fetchGroups = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await axios.get('http://127.0.0.1:8000/api/study-groups/', {
-        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
-      });
-      setGroups(response.data);
-    } catch (error) {
-      console.error('Error fetching groups:', error);
-      setError('Failed to load study groups. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showChatModal, selectedGroup, fetchMessages]);
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://127.0.0.1:8000/api/study-groups/', newGroup, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/`, newGroup, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       setShowCreateModal(false);
@@ -101,7 +109,7 @@ const Groups = () => {
 
   const handleJoinGroup = async (groupId) => {
     try {
-      await axios.post(`http://127.0.0.1:8000/api/study-groups/${groupId}/join/`, {}, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/${groupId}/join/`, {}, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       fetchGroups();
@@ -113,7 +121,7 @@ const Groups = () => {
 
   const handleLeaveGroup = async (groupId) => {
     try {
-      await axios.post(`http://127.0.0.1:8000/api/study-groups/${groupId}/leave/`, {}, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/${groupId}/leave/`, {}, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       fetchGroups();
@@ -129,7 +137,7 @@ const Groups = () => {
 
   const handleDismissGroup = async (groupId) => {
     try {
-      await axios.post(`http://127.0.0.1:8000/api/study-groups/${groupId}/dismiss/`, {}, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/${groupId}/dismiss/`, {}, {
         headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
       });
       fetchGroups();
@@ -148,23 +156,12 @@ const Groups = () => {
     setShowMembersModal(true);
   };
 
-  const fetchMessages = async (groupId) => {
-    try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/study-groups/${groupId}/messages/`, {
-        headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
-      });
-      setMessages(response.data);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
-
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
     try {
-      await axios.post(`http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/create_message/`, {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/study-groups/${selectedGroup.id}/create_message/`, {
         content: newMessage.trim()
       }, {
         headers: {
@@ -185,12 +182,6 @@ const Groups = () => {
     }
   };
 
-  const handleEnterChat = (group) => {
-    setSelectedGroup(group);
-    setShowMembersModal(false);
-    setShowChatModal(true);
-  };
-
   const handleCloseChatModal = () => {
     setShowChatModal(false);
     setMessages([]);
@@ -203,33 +194,11 @@ const Groups = () => {
     }
   };
 
-  const handleUpdateGroupTitle = async () => {
-    try {
-      await axios.patch(
-        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/`,
-        { name: editedTitle },
-        {
-          headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
-        }
-      );
-      setSelectedGroup({ ...selectedGroup, name: editedTitle });
-      setIsEditingTitle(false);
-      fetchGroups(); // Refresh the groups list
-    } catch (error) {
-      console.error('Error updating group title:', error);
-      if (error.response?.data?.detail) {
-        alert(error.response.data.detail);
-      } else {
-        alert('Failed to update group title. Please try again.');
-      }
-    }
-  };
-
   const handleEditGroup = async (e) => {
     e.preventDefault();
     try {
       await axios.patch(
-        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/${selectedGroup.id}/`,
         editGroupData,
         {
           headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
@@ -272,7 +241,7 @@ const Groups = () => {
       
       // First create a message with the file name using the create_message action
       const messageResponse = await axios.post(
-        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/create_message/`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/${selectedGroup.id}/create_message/`,
         { content: `Uploaded file: ${selectedFile.name}` },
         {
           headers: {
@@ -294,7 +263,7 @@ const Groups = () => {
       console.log('File to upload:', selectedFile);
 
       // Upload the file using the correct URL structure
-      const uploadUrl = `http://127.0.0.1:8000/api/study-groups/messages/${messageId}/upload_file/`;
+      const uploadUrl = `${process.env.REACT_APP_API_URL}/api/study-groups/messages/${messageId}/upload_file/`;
       console.log('Upload URL:', uploadUrl);
       
       const uploadResponse = await axios.post(
@@ -340,7 +309,7 @@ const Groups = () => {
       
       // First, get the file details to get the original filename
       const fileDetailsResponse = await axios.get(
-        `http://127.0.0.1:8000/api/study-groups/messages/download_file/?file_id=${fileId}`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/messages/download_file/?file_id=${fileId}`,
         {
           headers: { Authorization: `Token ${sessionStorage.getItem('token')}` },
           responseType: 'blob'
@@ -408,7 +377,7 @@ const Groups = () => {
 
     try {
       await axios.delete(
-        `http://127.0.0.1:8000/api/study-groups/messages/${messageId}/delete_file/?file_id=${fileId}`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/messages/${messageId}/delete_file/?file_id=${fileId}`,
         {
           headers: { Authorization: `Token ${sessionStorage.getItem('token')}` }
         }
@@ -429,7 +398,7 @@ const Groups = () => {
     try {
       console.log('Searching messages in group:', selectedGroup.id);
       const response = await axios.get(
-        `http://127.0.0.1:8000/api/study-groups/${selectedGroup.id}/search_messages/?q=${encodeURIComponent(searchQuery)}`,
+        `${process.env.REACT_APP_API_URL}/api/study-groups/${selectedGroup.id}/search_messages/?q=${encodeURIComponent(searchQuery)}`,
         {
           headers: { 
             Authorization: `Token ${sessionStorage.getItem('token')}` 

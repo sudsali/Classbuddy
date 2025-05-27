@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -14,15 +14,34 @@ const DirectMessages = () => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [error, setError] = useState('');
-  const [users, setUsers] = useState([]);
   const messagesEndRef = useRef(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [chatToDelete, setChatToDelete] = useState(null);
 
+  const fetchChats = useCallback(async () => {
+    try {
+      setError('');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/`);
+      setChats(response.data);
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+      setError('Error fetching chats. Please try again later.');
+    }
+  }, []);
+
+  const fetchMessages = useCallback(async (chatId) => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/${chatId}/messages/`);
+      setMessages(response.data);
+      scrollToBottom();
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchChats();
-    fetchUsers();
-  }, []);
+  }, [fetchChats]);
 
   useEffect(() => {
     if (selectedChat) {
@@ -30,37 +49,7 @@ const DirectMessages = () => {
       const interval = setInterval(() => fetchMessages(selectedChat.id), 3000);
       return () => clearInterval(interval);
     }
-  }, [selectedChat]);
-
-  const fetchChats = async () => {
-    try {
-      setError('');
-      const response = await axios.get('/api/direct-messages/chats/');
-      setChats(response.data);
-    } catch (error) {
-      console.error('Error fetching chats:', error);
-      setError('Error fetching chats. Please try again later.');
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get('/api/users/');
-      setUsers(response.data.filter(u => u.id !== user.id));
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-
-  const fetchMessages = async (chatId) => {
-    try {
-      const response = await axios.get(`/api/direct-messages/chats/${chatId}/messages/`);
-      setMessages(response.data);
-      scrollToBottom();
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
+  }, [selectedChat, fetchMessages]);
 
   const handleChatSelect = (chat) => {
     setSelectedChat(chat);
@@ -78,7 +67,7 @@ const DirectMessages = () => {
     }
 
     try {
-      const response = await axios.post('/api/direct-messages/chats/get_or_create_chat/', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/get_or_create_chat/`, {
         email: email.trim()
       });
       
@@ -122,10 +111,10 @@ const DirectMessages = () => {
         receiver: selectedChat.participants.find(p => p.id !== user.id).id
       };
 
-      const response = await axios.post('/api/direct-messages/messages/', messageData);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/direct-messages/messages/`, messageData);
       
       if (!chats.some(chat => chat.id === selectedChat.id)) {
-        const chatResponse = await axios.get(`/api/direct-messages/chats/${selectedChat.id}/`);
+        const chatResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/${selectedChat.id}/`);
         setChats(prevChats => [...prevChats, chatResponse.data]);
       } else {
         setChats(prevChats => 
@@ -151,7 +140,7 @@ const DirectMessages = () => {
 
   const handleDeleteChat = async (chat) => {
     try {
-      await axios.delete(`/api/direct-messages/chats/${chat.id}/`);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/direct-messages/chats/${chat.id}/`);
       setChats(chats.filter(c => c.id !== chat.id));
       if (selectedChat?.id === chat.id) {
         setSelectedChat(null);

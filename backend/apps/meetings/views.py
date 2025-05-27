@@ -8,6 +8,7 @@ from .models import Meeting, AvailabilitySlot
 from .serializers import MeetingSerializer, AvailabilitySlotSerializer
 from apps.study_groups.models import StudyGroup
 import logging
+from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
 
@@ -155,3 +156,17 @@ class AvailabilitySlotViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.error(f"Error in perform_create: {str(e)}", exc_info=True)
             raise
+
+class MeetingAvailabilityView(APIView):
+    def get(self, request, meeting_id):
+        # Sample response, replace with actual logic
+        return Response({"message": f"GET availability for meeting {meeting_id}"}, status=status.HTTP_200_OK)
+
+    def post(self, request, meeting_id):
+        # Sample response, replace with actual logic
+        return Response({"message": f"POST availability for meeting {meeting_id}"}, status=status.HTTP_201_CREATED)
+
+class StudyGroupMembersView(APIView):
+    def get(self, request, group_id):
+        # Sample response, replace with actual logic
+        return Response({"message": f"GET members for study group {group_id}"}, status=status.HTTP_200_OK)

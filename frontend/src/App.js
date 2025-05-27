@@ -15,10 +15,7 @@ import './App.css';
 import ForgotPassword from './pages/ForgetPassword';
 
 // Import your other page components here
-const Meetings = () => <div>Meeting Planner</div>;
-const Notifications = () => <div>Notifications</div>;
-const Bookmarks = () => <div>Bookmarks</div>;
-const Tasks = () => <div>Task Tracker</div>;
+//const Meetings = () => <div>Meeting Planner</div>;
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -57,10 +54,7 @@ const App = () => {
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/" element={<Navigate to="/groups" replace />} />
           <Route path="/meetings" element={<PrivateRoute><MeetingPlanner /></PrivateRoute>} />
-          <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
           <Route path="/groups" element={<PrivateRoute><Groups /></PrivateRoute>} />
-          <Route path="/bookmarks" element={<PrivateRoute><Bookmarks /></PrivateRoute>} />
-          <Route path="/tasks" element={<PrivateRoute><Tasks /></PrivateRoute>} />
           <Route path="/messages" element={<PrivateRoute><DirectMessages /></PrivateRoute>} />
         </Routes>
       </div>

@@ -3,10 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   FaCalendarAlt, 
-  FaBell, 
   FaUsers, 
-  FaBookmark, 
-  FaTasks, 
   FaComments,
   FaGraduationCap,
   FaUser,
@@ -27,9 +24,6 @@ const Sidebar = () => {
   const menuItems = [
     { icon: <FaUsers />, text: 'Groups', path: '/groups' },
     { icon: <FaCalendarAlt />, text: 'Meeting Planner', path: '/meetings' },
-    { icon: <FaBell />, text: 'Notifications', path: '/notifications' },
-    { icon: <FaBookmark />, text: 'Bookmarks', path: '/bookmarks' },
-    { icon: <FaTasks />, text: 'Task Tracker', path: '/tasks' },
     { icon: <FaComments />, text: 'Direct Messages', path: '/messages' },
   ];
 
