@@ -2,46 +2,51 @@
 
 ClassBuddy is a web-based platform designed to enhance the study group experience by providing tools for group formation, meeting scheduling, and resource sharing.
 
-
 ## Features
 
 - **Study Group Management**
   - Create and join study groups
   - Group member management
-  - Real-time group chat
-  - File sharing within groups
+  - Group search functionality
+  - Group member roles and permissions
 
 - **Smart Meeting Scheduler**
   - Interactive calendar interface
-  - Automatic availability detection
-  - Best time slot suggestions
-  - Meeting reminders
+  - Availability selection and visualization
+  - Meeting creation and management
+  - Real-time availability updates
+
+- **Task Management**
+  - Drag-and-drop task board
+  - Task status tracking (To Do, In Progress, Completed)
+  - Task editing and deletion
+  - Task position management
 
 - **File Sharing**
-  - Secure file uploads
+  - Secure file uploads (up to 25MB)
   - File organization by study groups
+  - File sharing with specific group members
   - Download tracking
-  - Access control
 
 - **User Experience**
-  - Responsive design
+  - Responsive design with light/dark theme support
   - Real-time updates
   - Intuitive interface
   - Cross-platform compatibility
 
 ## Tech Stack
 
-- **Frontend**
-  - React.js
-  - React Big Calendar
-  - Axios for API calls
-  - CSS3 for styling
+### Frontend
+- React.js with React Router and React Big Calendar
+- Axios for API communication
+- React Hooks and Context API for state management
+- CSS3 with responsive design and theme support
 
-- **Backend**
-  - Django
-  - Django REST Framework
-  - PostgreSQL
-  - Django Authentication
+### Backend
+- Django with Django REST Framework
+- PostgreSQL database with Django ORM
+- Token-based authentication and email verification
+- CORS configuration for API security
 
 ## Getting Started
 
@@ -91,14 +96,26 @@ REACT_APP_API_URL=http://localhost:8000
 - Rachit Mehul Pathak (rmp10015)
 - Frank Fan (lf2606)
 
-## Registration page:
+## Registration Page:
 
 <img src="https://drive.google.com/uc?export=view&id=1rSpQz_hPOmarxcfSILTFAUEz2uimsuQ0" alt="Image" width="700"/>
 
-## Login page:
+## Login Page:
 
 <img src="https://drive.google.com/uc?export=view&id=1oeBV6Lri8wqsSinR5Pgjt8KwXI8WVWOn" alt="Image" width="700"/>
 
-## Study Group page:
+## Study Group Page:
 
-<img src="https://drive.google.com/file/d/183B9nZa0Dhzqxh6Hq0bAFHPIkzy0k7fa/view?usp=sharing" alt="Image" width="700"/>
+<img src="https://drive.google.com/uc?export=view&id=183B9nZa0Dhzqxh6Hq0bAFHPIkzy0k7fa" alt="Image" width="700"/>
+
+## Meeting Page:
+
+<img src="https://drive.google.com/uc?export=view&id=1NoiQ6ugbp-pyr-rX5Nt0yiP1oiLHkEJ4" alt="Image" width="700"/>
+
+## Direct Messaging Page:
+
+<img src="https://drive.google.com/uc?export=view&id=1mpVsaG6585UrfRk7Eu8Oyf4Qj07YyOuP" alt="Image" width="700"/>
+
+
+
+
