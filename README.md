@@ -1,18 +1,95 @@
-# SE-Spring25-Group2
+# ClassBuddy - Collaborative Study Platform
+
+ClassBuddy is a web-based platform designed to enhance the study group experience by providing tools for group formation, meeting scheduling, and resource sharing.
+
+
+## Features
+
+- **Study Group Management**
+  - Create and join study groups
+  - Group member management
+  - Real-time group chat
+  - File sharing within groups
+
+- **Smart Meeting Scheduler**
+  - Interactive calendar interface
+  - Automatic availability detection
+  - Best time slot suggestions
+  - Meeting reminders
+
+- **File Sharing**
+  - Secure file uploads
+  - File organization by study groups
+  - Download tracking
+  - Access control
+
+- **User Experience**
+  - Responsive design
+  - Real-time updates
+  - Intuitive interface
+  - Cross-platform compatibility
+
+## Tech Stack
+
+- **Frontend**
+  - React.js
+  - React Big Calendar
+  - Axios for API calls
+  - CSS3 for styling
+
+- **Backend**
+  - Django
+  - Django REST Framework
+  - PostgreSQL
+  - Django Authentication
+
+## Getting Started
+
+### Prerequisites
+- Python 3.8+
+- Node.js 14+
+- PostgreSQL
+- npm or yarn
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/classbuddy.git
+cd classbuddy
+```
+
+2. Set up the backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows use this: venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+3. Set up the frontend
+```bash
+cd frontend
+npm install
+npm start
+```
+
+4. Configure environment variables
+Create a `.env` file in the frontend directory:
+```
+REACT_APP_API_URL=http://localhost:8000
+```
 
 ## Team Members
+
 - Sudhanshu Sali (ss17526)
 - Harsh Jalutharia (hj2607)
 - Soham Moghe (sm11882)
 - Clely Fernandes (cvf9554)
 - Rachit Mehul Pathak (rmp10015)
 - Frank Fan (lf2606)
-
-## Selected Project: ClassBuddy
-
-- ClassBuddy is a web application designed to enhance collaborative learning for students by helping them form study groups, share resources, and organize projects. The platform enables students to connect with peers based on shared academic goals, class enrollment, and interests, making group study and collaboration easier and more efficient. It integrates tools for file sharing, scheduling, and real-time collaboration to ensure a streamlined group learning experience. By offering features like AI-generated study aids, gamified rewards, and calendar synchronization, the app encourages productivity and fosters academic success.
-
-# Work done so far:
 
 ## Registration page:
 
@@ -25,29 +102,3 @@
 ## Study Group page:
 
 <img src="https://drive.google.com/uc?export=view&id=1ptqOJqDaKcMxvJaX1w6v03zKXsRo_65b" alt="Image" width="700"/>
-
-## Steps to Run Project
-**1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)**
-
-**2. Use the following commands** 
-
-<pre># Build and start docker containers:
-docker-compose up --build -d
-</pre>
-
-
-- Frontend: http://localhost:3000
-- Backend: http://localhost:8000/admin
-
-## Troubleshooting
-- The React frontend might take a minute to load after starting the docker containers. 
-- If the frontend loads, but the django admin page doesn't, try stopping the containers from Docker Desktop client and then start them again using the command above.
-
-## Tech Stack
-Our project uses:
-- Frontend: React.js
-- Backend: Django
-- Database: PostgreSQL(Relational Data) , Reddis(Cache and Real time chatting)
-- Boto3 for AWS S3 integration
-- GitHub Actions for CI/CD pipeline
-  
