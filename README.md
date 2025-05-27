@@ -1,6 +1,6 @@
 # ClassBuddy - Collaborative Study Platform
 
-ClassBuddy is a web-based platform designed to enhance the study group experience by providing tools for group formation, meeting scheduling, and resource sharing.
+ClassBuddy is a web-based platform designed to enhance the study group experience by providing tools for group formation, task tracking, meeting scheduling, and resource sharing.
 
 ## Features
 
